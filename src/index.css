@@ -1,0 +1,108 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f4f3ff;
+  color: #1a1a2e;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+button { cursor: pointer; font-family: inherit; }
+input, textarea, select { font-family: inherit; font-size: inherit; }
+a { text-decoration: none; color: inherit; }
+#root { min-height: 100vh; }
+
+:root {
+  --primary: #6c63ff;
+  --primary-light: #f4f3ff;
+  --bg: #f4f3ff;
+  --text: #1a1a2e;
+  --border: #e4e3f7;
+  --shadow: 0 2px 16px rgba(108,99,255,.08);
+  --radius-card: 20px;
+  --radius: 10px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: var(--radius);
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all .18s;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: #574fd6; }
+.btn-ghost { background: transparent; color: var(--primary); border: 1.5px solid var(--border); }
+.btn-ghost:hover { background: var(--border); }
+.btn-danger { background: #ff4757; color: #fff; }
+.btn-danger:hover { background: #e03145; }
+.btn-sm { padding: 5px 12px; font-size: 13px; }
+
+.card { background: #fff; border-radius: var(--radius-card); box-shadow: var(--shadow); border: 1px solid var(--border); }
+
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: var(--primary-light); color: var(--primary); }
+
+.status-borrador { background: #f0f0f0; color: #666; }
+.status-listo { background: #e8f5e9; color: #2e7d32; }
+.status-programado { background: #e3f2fd; color: #1565c0; }
+.status-publicado { background: #ede7f6; color: #4527a0; }
+
+.type-historia { background: #fce4ec; color: #c62828; }
+.type-posteo { background: #e8f5e9; color: #2e7d32; }
+.type-reel { background: #e3f2fd; color: #0d47a1; }
+.type-carrusel { background: #fff8e1; color: #f57f17; }
+
+/* === Calendar cells === */
+.cal-cell { border-radius: 10px; display: flex; flex-direction: column; padding: 6px 5px 5px; cursor: pointer; border: 1.5px solid transparent; min-height: 72px; background: #fafafa; transition: background .12s, border-color .12s; }
+.cal-cell:hover { background: #ebebff; border-color: #c5c4f5; }
+.cal-cell.is-today { background: #6c63ff; border-color: transparent; }
+.cal-cell.is-today:hover { background: #574fd6; }
+.cal-cell.has-content { border-color: #e4e3f7; background: #f0efff; }
+.cal-cell.has-content:hover { background: #e0dfff; border-color: #c5c4f5; }
+
+/* === Tabs underline === */
+.tab-ul { padding: 10px 16px; border: none; border-bottom: 2.5px solid transparent; background: none; font-size: 13px; font-weight: 600; color: #6b6b8a; cursor: pointer; font-family: inherit; white-space: nowrap; transition: color .15s; margin-bottom: -1.5px; }
+.tab-ul:hover { color: #6c63ff; }
+.tab-ul.is-active { color: #6c63ff; border-bottom-color: #6c63ff; }
+
+/* === Circular nav button === */
+.cal-nav-btn { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #e4e3f7; background: none; cursor: pointer; font-size: 14px; color: #6b6b8a; display: flex; align-items: center; justify-content: center; transition: all .12s; }
+.cal-nav-btn:hover { background: #ebebff; border-color: #c5c4f5; color: #6c63ff; }
+
+/* === Feed grid === */
+.f-cell { aspect-ratio: 4/5; background: #e4e3f7; position: relative; cursor: pointer; overflow: hidden; }
+.f-ov { position: absolute; inset: 0; background: rgba(108,99,255,.55); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s; }
+.f-cell:hover .f-ov { opacity: 1; }
+
+/* === Sidebar add btn === */
+.sd-add-btn { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px; border: 1.5px solid #e4e3f7; background: none; cursor: pointer; color: #6c63ff; font-family: inherit; transition: background .12s; }
+.sd-add-btn:hover { background: #ebebff; border-color: #c5c4f5; }
+
+/* === Block form — field inputs === */
+.field-input { width: 100%; border: 1.5px solid #e4e3f7; border-radius: 10px; padding: 8px 10px; font-size: 13px; font-family: inherit; color: #1a1a2e; background: #f4f3ff; outline: none; }
+.field-input:focus { border-color: #6c63ff; background: #fff; }
+.field-textarea { width: 100%; border: 1.5px solid #e4e3f7; border-radius: 10px; padding: 8px 10px; font-size: 13px; font-family: inherit; color: #1a1a2e; background: #f4f3ff; outline: none; resize: vertical; min-height: 70px; line-height: 1.5; }
+.field-textarea:focus { border-color: #6c63ff; background: #fff; }
+
+/* === Image upload areas === */
+.img-area { border: 2px dashed #e4e3f7; border-radius: 12px; padding: 1.25rem; text-align: center; cursor: pointer; position: relative; overflow: hidden; margin-top: 4px; transition: border-color .12s, background .12s; }
+.img-area:hover { border-color: #c5c4f5; background: #ebebff; }
+.car-add { border: 2px dashed #e4e3f7; border-radius: 10px; padding: 1rem; text-align: center; cursor: pointer; position: relative; overflow: hidden; margin-top: 8px; transition: border-color .12s, background .12s; }
+.car-add:hover { border-color: #c5c4f5; background: #ebebff; }
+
+/* === Block delete button === */
+.block-del-btn { background: none; border: none; cursor: pointer; color: #a0a0b8; font-size: 20px; line-height: 1; padding: 0 4px; transition: color .12s; font-family: inherit; }
+.block-del-btn:hover { color: #e53935; }
+
+/* === DayDetail add-content buttons === */
+.add-type-btn { font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 20px; border: 1.5px solid #e4e3f7; background: #fff; cursor: pointer; color: #6b6b8a; font-family: inherit; transition: all .12s; }
+.add-type-btn:hover { background: #ebebff; border-color: #c5c4f5; color: #6c63ff; }
+.btn-save-primary { padding: 8px 20px; border-radius: 10px; border: none; background: #6c63ff; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; font-family: inherit; transition: background .12s; }
+.btn-save-primary:hover { background: #4b44cc; }
+.btn-cancel-secondary { padding: 8px 16px; border-radius: 10px; border: 1.5px solid #e4e3f7; background: none; font-size: 13px; font-weight: 600; color: #6b6b8a; cursor: pointer; font-family: inherit; transition: background .12s; }
+.btn-cancel-secondary:hover { background: #f4f3ff; }
