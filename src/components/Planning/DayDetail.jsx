@@ -68,7 +68,7 @@ export default function DayDetail({ date, planningId, onClose, readOnly = false,
 
         {!readOnly && (
           <div style={styles.addRow} className="add-type-row">
-            <span style={styles.addLabel}>Agregar</span>
+            <span style={styles.addLabel} className="add-type-label">Agregar</span>
             {TYPES.map(t => (
               <button key={t} className="add-type-btn" onClick={() => addPost(t)} disabled={adding !== null}>
                 {adding === t ? 'Agregando...' : TYPE_LABELS[t]}

@@ -125,13 +125,13 @@ export default function PlanningPage() {
       </div>
 
       {/* View content */}
-      <div style={s.viewPad}>
+      <div style={s.viewPad} className="cm-view-pad">
 
         {/* CALENDAR VIEW */}
         {tab === 'Calendario' && (
-          <div style={s.calLayout}>
+          <div className="cm-cal-layout">
             {/* Calendar card */}
-            <div style={s.calCard}>
+            <div style={s.calCard} className="cm-cal-main">
               <CalendarView
                 planningId={planning.id}
                 year={year}
@@ -142,9 +142,9 @@ export default function PlanningPage() {
             </div>
 
             {/* Sidebar */}
-            <div style={s.sidebar}>
+            <div className="cm-cal-sidebar">
               {/* Card 1: Fechas especiales */}
-              <div style={s.sideCard}>
+              <div style={s.sideCard} className="cm-sd-card">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                   <div style={s.sideTitle}>Fechas especiales</div>
                   {profile?.role === 'admin' && (
@@ -207,7 +207,7 @@ export default function PlanningPage() {
               </div>
 
               {/* Card 2: Resumen del mes */}
-              <div style={s.sideCard}>
+              <div style={s.sideCard} className="cm-summary-card">
                 <div style={{ ...s.sideTitle, marginBottom: '0.75rem' }}>Resumen del mes</div>
                 <div style={s.resGrid}>
                   {TIPO_SUMMARY.map(t => (
@@ -220,7 +220,7 @@ export default function PlanningPage() {
               </div>
 
               {/* Card 3: Leyenda */}
-              <div style={s.sideCard}>
+              <div style={s.sideCard} className="cm-legend-card">
                 <div style={s.legRow}>
                   {LEGEND.map(l => (
                     <div key={l.label} style={s.legItem}>
