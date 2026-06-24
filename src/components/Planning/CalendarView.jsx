@@ -112,9 +112,9 @@ export default function CalendarView({ planningId, year, month, readOnly = false
 const s = {
   header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' },
   monthLabel: { fontSize: 16, fontWeight: 700, color: '#1a1a2e' },
-  dayLabels: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 6 },
+  dayLabels: { display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', marginBottom: 6 },
   dayLbl: { textAlign: 'center', fontSize: 10, fontWeight: 600, color: '#a0a0b8', textTransform: 'uppercase', letterSpacing: '.04em', padding: '3px 0' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 4 },
   dayNum: { fontSize: 12, fontWeight: 600, lineHeight: 1, marginBottom: 4, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   cellTags: { display: 'flex', flexDirection: 'column', gap: 2 },
 }

@@ -58,7 +58,7 @@ a { text-decoration: none; color: inherit; }
 .type-carrusel { background: #fff8e1; color: #f57f17; }
 
 /* === Calendar cells === */
-.cal-cell { border-radius: 10px; display: flex; flex-direction: column; padding: 6px 5px 5px; cursor: pointer; border: 1.5px solid transparent; min-height: 72px; background: #fafafa; transition: background .12s, border-color .12s; }
+.cal-cell { border-radius: 10px; display: flex; flex-direction: column; padding: 6px 5px 5px; cursor: pointer; border: 1.5px solid transparent; min-height: 72px; background: #fafafa; transition: background .12s, border-color .12s; overflow: hidden; }
 .cal-cell:hover { background: #ebebff; border-color: #c5c4f5; }
 .cal-cell.is-today { background: #6c63ff; border-color: transparent; }
 .cal-cell.is-today:hover { background: #574fd6; }
@@ -122,7 +122,7 @@ a { text-decoration: none; color: inherit; }
 
 @media (max-width: 767px) {
   .client-cal-layout { grid-template-columns: 1fr; }
-  .client-cal-main { order: 2; }
+  .client-cal-main { order: 2; padding: 12px !important; }
   .client-cal-sidebar { order: 1; }
 }
 
