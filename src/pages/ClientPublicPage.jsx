@@ -8,12 +8,27 @@ import StoriesView from '../components/Planning/StoriesView'
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const TABS = ['Calendario', 'Feed', 'Historias']
 
+const TIPO_SUMMARY = [
+  { key: 'historia',  label: 'Historias', bg: '#ebebff', color: '#6c63ff' },
+  { key: 'posteo',   label: 'Posteos',   bg: '#e0faf3', color: '#1a9e7a' },
+  { key: 'reel',     label: 'Reels',     bg: '#fff0ec', color: '#d84315' },
+  { key: 'carrusel', label: 'Carrusels', bg: '#f8eaff', color: '#7b1fa2' },
+]
+
+const LEGEND = [
+  { label: 'Historia', color: '#6c63ff' },
+  { label: 'Posteo',   color: '#43c59e' },
+  { label: 'Reel',     color: '#ff7043' },
+  { label: 'Carrusel', color: '#ab47bc' },
+]
+
 export default function ClientPublicPage() {
   const { slug } = useParams()
   const [client, setClient] = useState(null)
   const [planning, setPlanning] = useState(null)
   const [tab, setTab] = useState('Calendario')
   const [notFound, setNotFound] = useState(false)
+  const [summary, setSummary] = useState({})
 
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
@@ -21,6 +36,7 @@ export default function ClientPublicPage() {
 
   useEffect(() => { fetchClient() }, [slug])
   useEffect(() => { if (client) fetchPlanning() }, [client, year, month])
+  useEffect(() => { if (planning) fetchSummary() }, [planning])
 
   async function fetchClient() {
     const { data } = await supabase.from('clients').select('*').eq('slug', slug).single()
@@ -31,6 +47,14 @@ export default function ClientPublicPage() {
   async function fetchPlanning() {
     const { data } = await supabase.from('plannings').select('*').eq('client_id', client.id).eq('year', year).eq('month', month).single()
     setPlanning(data || null)
+    setSummary({})
+  }
+
+  async function fetchSummary() {
+    const { data } = await supabase.from('posts').select('type').eq('planning_id', planning.id)
+    const counts = {}
+    ;(data || []).forEach(p => { counts[p.type] = (counts[p.type] || 0) + 1 })
+    setSummary(counts)
   }
 
   function prevMonth() {
@@ -76,18 +100,45 @@ export default function ClientPublicPage() {
           ))}
         </div>
 
-        <div style={styles.content}>
-          {!planning
-            ? <p style={{ textAlign: 'center', color: '#aaa', paddingTop: 40 }}>No hay planning para este mes.</p>
-            : (
-              <>
-                {tab === 'Calendario' && <CalendarView planningId={planning.id} year={year} month={month} readOnly />}
-                {tab === 'Feed' && <FeedView planningId={planning.id} readOnly />}
-                {tab === 'Historias' && <StoriesView planningId={planning.id} readOnly />}
-              </>
-            )
-          }
-        </div>
+        {!planning ? (
+          <div style={styles.content}>
+            <p style={{ textAlign: 'center', color: '#aaa', paddingTop: 40 }}>No hay planning para este mes.</p>
+          </div>
+        ) : tab === 'Calendario' ? (
+          <div style={styles.calLayout}>
+            <div style={styles.content}>
+              <CalendarView planningId={planning.id} year={year} month={month} readOnly />
+            </div>
+            <div style={styles.sidebar}>
+              <div style={styles.sideCard}>
+                <div style={styles.sideTitle}>Resumen del mes</div>
+                <div style={styles.resGrid}>
+                  {TIPO_SUMMARY.map(t => (
+                    <div key={t.key} style={{ ...styles.resItem, background: t.bg }}>
+                      <span style={{ ...styles.resCount, color: t.color }}>{summary[t.key] || 0}</span>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: t.color, opacity: .85 }}>{t.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={styles.sideCard}>
+                <div style={styles.legRow}>
+                  {LEGEND.map(l => (
+                    <div key={l.label} style={styles.legItem}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: l.color }} />
+                      {l.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={styles.content}>
+            {tab === 'Feed' && <FeedView planningId={planning.id} readOnly />}
+            {tab === 'Historias' && <StoriesView planningId={planning.id} readOnly />}
+          </div>
+        )}
 
         <div style={styles.publicNote}>
           <span>Vista de cliente — podés dejar comentarios en cada contenido haciendo click en el día.</span>
@@ -108,10 +159,19 @@ const styles = {
   clientBadge: { fontWeight: 700, fontSize: 16, color: 'var(--primary)' },
   nav: { display: 'flex', alignItems: 'center', gap: 6 },
   monthLabel: { fontSize: 14, fontWeight: 600, minWidth: 130, textAlign: 'center' },
-  body: { maxWidth: 960, margin: '0 auto', padding: '24px 20px' },
+  body: { maxWidth: 1100, margin: '0 auto', padding: '24px 20px' },
   tabs: { display: 'flex', gap: 4, marginBottom: 16, background: '#fff', borderRadius: 10, padding: 4, border: '1px solid var(--border)', width: 'fit-content' },
   tab: { background: 'none', border: 'none', padding: '7px 18px', borderRadius: 8, fontSize: 14, fontWeight: 500, color: '#888', cursor: 'pointer', transition: 'all .15s' },
   tabActive: { background: 'var(--primary)', color: '#fff' },
   content: { background: '#fff', borderRadius: 'var(--radius-card)', border: '1px solid var(--border)', padding: 20 },
   publicNote: { marginTop: 16, padding: '10px 16px', background: 'rgba(108,99,255,.07)', borderRadius: 10, fontSize: 13, color: '#888', textAlign: 'center' },
+  calLayout: { display: 'grid', gridTemplateColumns: '1fr 260px', gap: '1.25rem' },
+  sidebar: { display: 'flex', flexDirection: 'column', gap: '1rem' },
+  sideCard: { background: '#fff', borderRadius: 'var(--radius-card)', border: '1px solid var(--border)', padding: '1.25rem' },
+  sideTitle: { fontSize: 12, fontWeight: 600, color: '#a0a0b8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '0.75rem' },
+  resGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 },
+  resItem: { borderRadius: 10, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 6 },
+  resCount: { fontSize: 18, fontWeight: 700, lineHeight: 1 },
+  legRow: { display: 'flex', flexWrap: 'wrap', gap: 8 },
+  legItem: { display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: '#6b6b8a' },
 }
