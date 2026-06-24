@@ -126,6 +126,19 @@ a { text-decoration: none; color: inherit; }
   .client-cal-sidebar { order: 1; }
 }
 
+/* === Topbar — mobile two-row layout === */
+@media (max-width: 767px) {
+  .topbar {
+    height: auto !important;
+    flex-direction: column;
+    align-items: stretch !important;
+    padding: 10px 5% !important;
+    gap: 4px;
+  }
+  .topbar-left { flex-wrap: wrap; gap: 6px; }
+  .topbar-right { flex-wrap: wrap; gap: 6px !important; }
+}
+
 /* === CM (PlanningPage) — responsive layout === */
 .cm-cal-layout { display: grid; grid-template-columns: 1fr 280px; gap: 1.25rem; max-width: 1000px; margin: 0 auto; }
 .cm-cal-sidebar { display: flex; flex-direction: column; gap: 1rem; }

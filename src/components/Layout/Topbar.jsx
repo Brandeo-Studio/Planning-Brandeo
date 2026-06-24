@@ -12,8 +12,8 @@ export default function Topbar({ title, subtitle, children }) {
   }
 
   return (
-    <header style={styles.bar}>
-      <div style={styles.left}>
+    <header style={styles.bar} className="topbar">
+      <div style={styles.left} className="topbar-left">
         <div style={styles.logoRow} onClick={() => navigate('/')} role="button">
           <div style={styles.logoIcon}>B</div>
           <span style={styles.logoText}>Planning Brandeo</span>
@@ -26,7 +26,7 @@ export default function Topbar({ title, subtitle, children }) {
           </>
         )}
       </div>
-      <div style={styles.right}>
+      <div style={styles.right} className="topbar-right">
         {children}
         {profile && <span style={styles.profileChip}>{profile.name || profile.role}</span>}
         <button className="btn btn-ghost btn-sm" onClick={handleLogout}>Salir</button>
