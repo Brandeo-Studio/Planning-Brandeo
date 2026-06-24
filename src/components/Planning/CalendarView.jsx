@@ -15,6 +15,7 @@ const CTAG = {
 
 export default function CalendarView({ planningId, year, month, readOnly = false, onPrev, onNext }) {
   const [posts, setPosts] = useState([])
+  const [commentedDates, setCommentedDates] = useState(new Set())
   const [selectedDate, setSelectedDate] = useState(null)
 
   useEffect(() => { fetchPosts() }, [planningId, year, month])
@@ -23,7 +24,18 @@ export default function CalendarView({ planningId, year, month, readOnly = false
     const { data } = await supabase
       .from('posts').select('id,type,title,status,date')
       .eq('planning_id', planningId).not('date', 'is', null)
-    setPosts(data || [])
+    const postData = data || []
+    setPosts(postData)
+    if (postData.length > 0) fetchCommentedDates(postData)
+    else setCommentedDates(new Set())
+  }
+
+  async function fetchCommentedDates(postData) {
+    const ids = postData.map(p => p.id)
+    const { data } = await supabase.from('comments').select('post_id').in('post_id', ids)
+    if (!data || data.length === 0) { setCommentedDates(new Set()); return }
+    const commentedIds = new Set(data.map(c => c.post_id))
+    setCommentedDates(new Set(postData.filter(p => commentedIds.has(p.id)).map(p => p.date)))
   }
 
   const firstDay = new Date(year, month - 1, 1).getDay()
@@ -61,10 +73,12 @@ export default function CalendarView({ planningId, year, month, readOnly = false
           const dayPosts = postsForDay(d)
           const tod = isToday(d)
           const hasCont = dayPosts.length > 0
+          const hasComments = commentedDates.has(dateStr(d))
           return (
             <div
               key={d}
               className={`cal-cell${tod ? ' is-today' : ''}${hasCont ? ' has-content' : ''}`}
+              style={hasComments && !tod ? { background: '#fffde7', borderColor: '#f0c040' } : undefined}
               onClick={() => setSelectedDate(dateStr(d))}
             >
               <div style={{ ...s.dayNum, color: tod ? '#fff' : '#1a1a2e' }}>{d}</div>
