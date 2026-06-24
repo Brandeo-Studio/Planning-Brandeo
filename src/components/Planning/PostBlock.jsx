@@ -313,7 +313,7 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
             </div>
           )}
 
-          <CommentBox postId={post.id} readOnly={readOnly} />
+          <CommentBox postId={post.id} readOnly={false} />
         </div>
       )}
     </div>
