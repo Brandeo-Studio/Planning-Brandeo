@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import DayDetail from './DayDetail'
+import CommentBox from './CommentBox'
 
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const TYPE_LABELS = { historia: 'Historia', posteo: 'Posteo', reel: 'Reel', carrusel: 'Carrusel' }
@@ -17,7 +18,7 @@ function arrowStyle(side) {
   }
 }
 
-function PostModal({ post, onClose, onEditDay }) {
+function PostModal({ post, onClose, onEditDay, readOnly }) {
   const [idx, setIdx] = useState(0)
   const images = post.type === 'carrusel'
     ? (post.carousel_images || [])
@@ -66,9 +67,12 @@ function PostModal({ post, onClose, onEditDay }) {
           )}
           {post.title && <div style={modal.tema}><strong>Tema:</strong> {post.title}</div>}
           {post.copy && <div style={modal.copy}>{post.copy}</div>}
-          <button style={modal.editBtn} onClick={() => { onEditDay(post.date); onClose() }}>
-            ✎ Editar este día
-          </button>
+          {!readOnly && (
+            <button style={modal.editBtn} onClick={() => { onEditDay(post.date); onClose() }}>
+              ✎ Editar este día
+            </button>
+          )}
+          <CommentBox postId={post.id} readOnly={false} />
         </div>
       </div>
     </div>
@@ -180,6 +184,7 @@ export default function FeedView({ planningId, readOnly = false, year, month, on
           post={modalPost}
           onClose={() => setModalPost(null)}
           onEditDay={date => setEditDate(date)}
+          readOnly={readOnly}
         />
       )}
       {editDate && (

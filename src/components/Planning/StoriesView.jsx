@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import DayDetail from './DayDetail'
+import CommentBox from './CommentBox'
 
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const DAYS_SHORT = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
@@ -64,9 +65,53 @@ function StoryPhone({ story, onClick }) {
   )
 }
 
+function StoryModal({ story, onClose, onEditDay, readOnly }) {
+  const date = story.date ? new Date(story.date + 'T00:00:00') : null
+  const dateLabel = date
+    ? date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
+    : ''
+
+  return (
+    <div style={sm.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={sm.box}>
+        <div style={sm.header}>
+          <div>
+            <span style={sm.typeBadge}>Historia</span>
+            {dateLabel && <span style={sm.dayLabel}> · {dateLabel}</span>}
+          </div>
+          <button style={sm.closeBtn} onClick={onClose}>✕</button>
+        </div>
+        <div style={sm.body}>
+          {story.image_url ? (
+            <img src={story.image_url} style={{ width: '100%', borderRadius: 10, objectFit: 'contain', display: 'block', maxHeight: 480, background: '#f4f3ff', marginBottom: '0.75rem' }} alt="" />
+          ) : story.video_url ? (
+            <div style={{ width: '100%', aspectRatio: '9/16', maxHeight: 360, borderRadius: 10, background: 'linear-gradient(135deg,#1a1a2e,#2d2b6e)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: '0.75rem' }}>
+              <span style={{ fontSize: 36, color: '#fff' }}>▶</span>
+              <button style={sm.videoBtn} onClick={() => window.open(story.video_url, '_blank', 'noopener')}>Ver video</button>
+            </div>
+          ) : (
+            <div style={{ width: '100%', aspectRatio: '9/16', maxHeight: 360, borderRadius: 10, background: '#ebebff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#6c63ff' }}>Sin imagen</span>
+            </div>
+          )}
+          {story.title && <div style={sm.tema}><strong>Tema:</strong> {story.title}</div>}
+          {story.copy && <div style={sm.copy}>{story.copy}</div>}
+          {!readOnly && (
+            <button style={sm.editBtn} onClick={() => { onEditDay(story.date); onClose() }}>
+              ✎ Editar este día
+            </button>
+          )}
+          <CommentBox postId={story.id} readOnly={false} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function StoriesView({ planningId, readOnly = false, year, month, onPrev, onNext }) {
   const [stories, setStories] = useState([])
   const [selected, setSelected] = useState(null)
+  const [modalStory, setModalStory] = useState(null)
 
   useEffect(() => { fetchStories() }, [planningId])
 
@@ -122,18 +167,40 @@ export default function StoriesView({ planningId, readOnly = false, year, month,
               <StoryPhone
                 key={story.id}
                 story={story}
-                onClick={() => setSelected(story.date)}
+                onClick={() => setModalStory(story)}
               />
             ))}
           </div>
         </div>
       ))}
 
+      {modalStory && (
+        <StoryModal
+          story={modalStory}
+          onClose={() => setModalStory(null)}
+          onEditDay={date => { setSelected(date); setModalStory(null) }}
+          readOnly={readOnly}
+        />
+      )}
       {selected && (
         <DayDetail date={selected} planningId={planningId} onClose={() => setSelected(null)} readOnly={readOnly} />
       )}
     </div>
   )
+}
+
+const sm = {
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '1rem' },
+  box: { background: '#fff', borderRadius: 20, width: '100%', maxWidth: 420, maxHeight: '90vh', overflow: 'hidden', boxShadow: '0 8px 40px rgba(0,0,0,.3)', display: 'flex', flexDirection: 'column' },
+  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.25rem', borderBottom: '1.5px solid #e4e3f7', flexShrink: 0 },
+  typeBadge: { padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 700, background: '#ebebff', color: '#6c63ff' },
+  dayLabel: { fontSize: 12, color: '#6b6b8a' },
+  closeBtn: { width: 28, height: 28, borderRadius: '50%', border: 'none', background: '#f4f3ff', cursor: 'pointer', fontSize: 16, color: '#6b6b8a', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  body: { padding: '1rem 1.25rem', overflowY: 'auto' },
+  tema: { fontSize: 12, color: '#6b6b8a', marginBottom: '0.5rem' },
+  copy: { fontSize: 13, color: '#1a1a2e', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '0.75rem' },
+  editBtn: { width: '100%', padding: 9, borderRadius: 10, border: '1.5px solid #6c63ff', background: 'none', fontSize: 13, fontWeight: 600, color: '#6c63ff', cursor: 'pointer', fontFamily: 'inherit', marginTop: '0.5rem', marginBottom: '0.5rem' },
+  videoBtn: { padding: '8px 20px', borderRadius: 20, border: 'none', background: '#6c63ff', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' },
 }
 
 const PHONE_WIDTH = 140
