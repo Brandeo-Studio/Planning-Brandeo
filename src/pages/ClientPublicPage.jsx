@@ -80,7 +80,7 @@ export default function ClientPublicPage() {
 
   return (
     <div style={styles.page}>
-      <header style={styles.header}>
+      <header style={styles.header} className="client-page-header">
         <div style={styles.logo}>
           <div style={styles.logoIcon}>B</div>
           <span style={styles.logoText}>Planning Brandeo</span>
@@ -93,7 +93,7 @@ export default function ClientPublicPage() {
         </div>
       </header>
 
-      <div style={styles.body}>
+      <div style={styles.body} className="client-page-body">
         <div style={styles.tabs}>
           {TABS.map(t => (
             <button key={t} style={{ ...styles.tab, ...(tab === t ? styles.tabActive : {}) }} onClick={() => setTab(t)}>{t}</button>
@@ -152,14 +152,14 @@ const styles = {
   page: { minHeight: '100vh', background: 'var(--bg)' },
   center: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' },
   notFound: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' },
-  header: { background: '#fff', borderBottom: '1px solid var(--border)', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 },
+  header: { background: '#fff', borderBottom: '1px solid var(--border)', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 },
   logo: { display: 'flex', alignItems: 'center', gap: 10 },
   logoIcon: { width: 32, height: 32, borderRadius: 9, background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15 },
   logoText: { fontWeight: 700, fontSize: 15 },
   clientBadge: { fontWeight: 700, fontSize: 16, color: 'var(--primary)' },
   nav: { display: 'flex', alignItems: 'center', gap: 6 },
   monthLabel: { fontSize: 14, fontWeight: 600, minWidth: 130, textAlign: 'center' },
-  body: { maxWidth: 1100, margin: '0 auto', padding: '24px 20px' },
+  body: { maxWidth: 1100, margin: '0 auto', paddingTop: 24, paddingBottom: 24 },
   tabs: { display: 'flex', gap: 4, marginBottom: 16, background: '#fff', borderRadius: 10, padding: 4, border: '1px solid var(--border)', width: 'fit-content' },
   tab: { background: 'none', border: 'none', padding: '7px 18px', borderRadius: 8, fontSize: 14, fontWeight: 500, color: '#888', cursor: 'pointer', transition: 'all .15s' },
   tabActive: { background: 'var(--primary)', color: '#fff' },
