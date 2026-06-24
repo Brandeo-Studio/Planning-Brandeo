@@ -58,6 +58,8 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
     carousel_images: post.carousel_images || [],
     notes: post.notes || '',
     video_url: post.video_url || '',
+    video_urls: post.video_urls || (post.video_url ? [post.video_url] : []),
+    ref_links: post.ref_links || [],
   })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState('')
@@ -65,9 +67,11 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
   const mainImgRef = useRef()
   const carImgRef = useRef()
   const refImgRef = useRef()
+  const carRefImgRef = useRef()
 
   const isCarrusel = post.type === 'carrusel'
-  const hasVideo = post.type === 'historia' || post.type === 'reel'
+  const isHistoria = post.type === 'historia'
+  const isReel = post.type === 'reel'
 
   async function uploadFile(file, path) {
     await supabase.storage.from('planning-media').upload(path, file, { upsert: true })
@@ -109,16 +113,30 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
     e.target.value = ''
   }
 
+  async function handleCarRefImages(e) {
+    const files = Array.from(e.target.files); if (!files.length) return
+    setUploading('carref')
+    const urls = await Promise.all(files.map((f, i) => {
+      const ext = f.name.split('.').pop()
+      return uploadFile(f, `posts/${post.id}/ref/${Date.now()}-${i}.${ext}`)
+    }))
+    setForm(f => ({ ...f, ref_images: [...(f.ref_images || []), ...urls] }))
+    setUploading('')
+    e.target.value = ''
+  }
+
   async function handleSave() {
     setSaving(true)
     const { data } = await supabase.from('posts').update({
       title: form.title,
       copy: form.copy,
       image_url: form.image_url || null,
-      video_url: form.video_url || null,
+      video_url: isHistoria ? (form.video_urls[0] || null) : (form.video_url || null),
       notes: form.notes || null,
       ref_images: form.ref_images,
       carousel_images: form.carousel_images,
+      video_urls: form.video_urls,
+      ref_links: form.ref_links,
     }).eq('id', post.id).select().single()
     setSaving(false)
     if (onUpdate && data) onUpdate(data)
@@ -131,9 +149,17 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
     if (onDelete) onDelete(post.id)
   }
 
+  function addRefLink() { setForm(f => ({ ...f, ref_links: [...f.ref_links, ''] })) }
+  function updateRefLink(i, val) { setForm(f => ({ ...f, ref_links: f.ref_links.map((l, j) => j === i ? val : l) })) }
+  function removeRefLink(i) { setForm(f => ({ ...f, ref_links: f.ref_links.filter((_, j) => j !== i) })) }
+
+  function addVideoUrl() { setForm(f => ({ ...f, video_urls: [...f.video_urls, ''] })) }
+  function updateVideoUrl(i, val) { setForm(f => ({ ...f, video_urls: f.video_urls.map((v, j) => j === i ? val : v) })) }
+  function removeVideoUrl(i) { setForm(f => ({ ...f, video_urls: f.video_urls.filter((_, j) => j !== i) })) }
+
   return (
     <div style={bs.card}>
-      {/* Header — click to expand/collapse */}
+      {/* Header */}
       <div style={bs.head} onClick={() => setExpanded(v => !v)}>
         <span style={{ ...bs.badge, background: TYPE_BG[post.type], color: TYPE_TC[post.type] }}>
           {TYPE_LABELS[post.type]}
@@ -149,11 +175,10 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
         </div>
       </div>
 
-      {/* Expanded — always show form (no "Editar" button needed) */}
       {expanded && (
         <div>
           {readOnly ? (
-            /* Read-only: display content without inputs */
+            /* Read-only */
             <div style={{ paddingTop: 4 }}>
               {post.image_url && (
                 <img src={post.image_url} style={{ ...bs.imgPrev, marginTop: 8 }} alt="" />
@@ -167,6 +192,22 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
                   <p style={{ fontSize: 13, color: '#1a1a2e', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginTop: 4 }}>{post.copy}</p>
                 </>
               )}
+              {(post.video_urls || []).filter(Boolean).length > 0 && (
+                <>
+                  <div style={bs.fieldLbl}>Videos</div>
+                  {(post.video_urls || []).filter(Boolean).map((url, i) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={bs.linkItem}>{url}</a>
+                  ))}
+                </>
+              )}
+              {(post.ref_links || []).filter(Boolean).length > 0 && (
+                <>
+                  <div style={bs.fieldLbl}>Links de referencia</div>
+                  {(post.ref_links || []).filter(Boolean).map((url, i) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={bs.linkItem}>{url}</a>
+                  ))}
+                </>
+              )}
               {post.notes && (
                 <>
                   <div style={bs.fieldLbl}>Notas internas</div>
@@ -175,7 +216,7 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
               )}
             </div>
           ) : (
-            /* Edit form — fields shown directly without needing "Editar" */
+            /* Edit form */
             <div style={{ borderTop: '1.5px solid #f0efff', paddingTop: 4 }}>
 
               {/* Tema */}
@@ -187,7 +228,7 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
                 placeholder="Ej: Lanzamiento producto nuevo"
               />
 
-              {/* Carrusel: image list + preview + add */}
+              {/* Carrusel: slides + ref images */}
               {isCarrusel && (
                 <>
                   <label style={bs.fieldLbl}>
@@ -215,6 +256,29 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
                     </div>
                     <input ref={carImgRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleCarouselImages} disabled={uploading !== ''} />
                   </div>
+
+                  {/* Ref images for Carrusel */}
+                  <label style={bs.fieldLbl}>
+                    Imágenes de referencia
+                    {uploading === 'carref' && <span style={bs.upTag}> Subiendo...</span>}
+                  </label>
+                  {form.ref_images.length > 0 && (
+                    <div style={bs.refGrid}>
+                      {form.ref_images.map((url, i) => (
+                        <div key={i} style={bs.refThumbWrap}>
+                          <img src={url} style={bs.refThumb} alt={`ref ${i + 1}`} />
+                          <button style={bs.refRm} onClick={() => setForm(f => ({ ...f, ref_images: f.ref_images.filter((_, j) => j !== i) }))}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="car-add" onClick={() => carRefImgRef.current?.click()}>
+                    <div style={{ fontSize: 16, marginBottom: 3 }}>🖼</div>
+                    <div style={{ fontSize: 12, color: '#a0a0b8', fontWeight: 500 }}>
+                      {form.ref_images.length ? 'Agregar más referencias' : 'Agregar imágenes de referencia'}
+                    </div>
+                    <input ref={carRefImgRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleCarRefImages} disabled={uploading !== ''} />
+                  </div>
                 </>
               )}
 
@@ -222,7 +286,7 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
               {!isCarrusel && (
                 <>
                   <label style={bs.fieldLbl}>
-                    {post.type === 'historia' ? 'Imagen de la historia' : post.type === 'reel' ? 'Miniatura' : 'Imagen principal del posteo'}
+                    {isHistoria ? 'Imagen de la historia' : isReel ? 'Portada' : 'Diseño final'}
                     {uploading === 'main' && <span style={bs.upTag}> Subiendo...</span>}
                   </label>
                   <div className="img-area" onClick={() => mainImgRef.current?.click()}>
@@ -245,7 +309,7 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
                     </button>
                   )}
 
-                  {/* Reference images */}
+                  {/* Reference images (Posteo / Historia / Reel) */}
                   <label style={bs.fieldLbl}>
                     Imágenes de referencia
                     {uploading === 'ref' && <span style={bs.upTag}> Subiendo...</span>}
@@ -270,8 +334,8 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
                 </>
               )}
 
-              {/* Video (Historia + Reel only) */}
-              {hasVideo && (
+              {/* Video — Reel: single URL */}
+              {isReel && (
                 <>
                   <label style={bs.fieldLbl}>Video (YouTube o Google Drive)</label>
                   <input
@@ -282,6 +346,28 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
                     placeholder="https://youtube.com/watch?v=..."
                   />
                   <div style={bs.vidHint}>Pegá el link de YouTube o Google Drive.</div>
+                </>
+              )}
+
+              {/* Video — Historia: multiple URLs */}
+              {isHistoria && (
+                <>
+                  <label style={bs.fieldLbl}>Videos (YouTube o Google Drive)</label>
+                  {form.video_urls.map((url, i) => (
+                    <div key={i} style={bs.linkRow}>
+                      <input
+                        className="field-input"
+                        type="url"
+                        value={url}
+                        onChange={e => updateVideoUrl(i, e.target.value)}
+                        placeholder="https://youtube.com/watch?v=..."
+                        style={{ flex: 1, marginTop: 0 }}
+                      />
+                      <button style={bs.linkRm} onClick={() => removeVideoUrl(i)}>✕</button>
+                    </div>
+                  ))}
+                  <button style={bs.addLinkBtn} onClick={addVideoUrl}>+ Agregar otro video</button>
+                  <div style={bs.vidHint}>Pegá links de YouTube o Google Drive.</div>
                 </>
               )}
 
@@ -302,6 +388,23 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder="Solo para el equipo..."
               />
+
+              {/* Links de referencia — all types */}
+              <label style={bs.fieldLbl}>Links de referencia</label>
+              {form.ref_links.map((url, i) => (
+                <div key={i} style={bs.linkRow}>
+                  <input
+                    className="field-input"
+                    type="url"
+                    value={url}
+                    onChange={e => updateRefLink(i, e.target.value)}
+                    placeholder="https://..."
+                    style={{ flex: 1, marginTop: 0 }}
+                  />
+                  <button style={bs.linkRm} onClick={() => removeRefLink(i)}>✕</button>
+                </div>
+              ))}
+              <button style={bs.addLinkBtn} onClick={addRefLink}>+ Agregar link</button>
 
               {/* Save row */}
               <div style={bs.saveRow}>
@@ -340,4 +443,8 @@ const bs = {
   refRm: { position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: '50%', background: 'rgba(0,0,0,.6)', border: 'none', color: '#fff', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, lineHeight: 1 },
   vidHint: { fontSize: 11, color: '#a0a0b8', marginTop: 4, lineHeight: 1.5 },
   saveRow: { display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: '1rem', paddingTop: '1rem', borderTop: '1.5px solid #e4e3f7' },
+  linkRow: { display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 },
+  linkRm: { flexShrink: 0, width: 28, height: 28, borderRadius: '50%', border: 'none', background: '#f4f3ff', color: '#a0a0b8', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' },
+  addLinkBtn: { marginTop: 8, padding: '6px 14px', borderRadius: 8, border: '1.5px dashed #c0c0d8', background: 'none', fontSize: 12, fontWeight: 600, color: '#6b6b8a', cursor: 'pointer', fontFamily: 'inherit' },
+  linkItem: { display: 'block', fontSize: 12, color: '#6c63ff', marginTop: 4, wordBreak: 'break-all', textDecoration: 'none' },
 }
