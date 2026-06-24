@@ -105,11 +105,11 @@ export default function ClientPublicPage() {
             <p style={{ textAlign: 'center', color: '#aaa', paddingTop: 40 }}>No hay planning para este mes.</p>
           </div>
         ) : tab === 'Calendario' ? (
-          <div style={styles.calLayout}>
-            <div style={styles.content}>
+          <div className="client-cal-layout">
+            <div className="client-cal-main" style={styles.content}>
               <CalendarView planningId={planning.id} year={year} month={month} readOnly />
             </div>
-            <div style={styles.sidebar}>
+            <div className="client-cal-sidebar">
               <div style={styles.sideCard}>
                 <div style={styles.sideTitle}>Resumen del mes</div>
                 <div style={styles.resGrid}>
@@ -165,8 +165,6 @@ const styles = {
   tabActive: { background: 'var(--primary)', color: '#fff' },
   content: { background: '#fff', borderRadius: 'var(--radius-card)', border: '1px solid var(--border)', padding: 20 },
   publicNote: { marginTop: 16, padding: '10px 16px', background: 'rgba(108,99,255,.07)', borderRadius: 10, fontSize: 13, color: '#888', textAlign: 'center' },
-  calLayout: { display: 'grid', gridTemplateColumns: '1fr 260px', gap: '1.25rem' },
-  sidebar: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   sideCard: { background: '#fff', borderRadius: 'var(--radius-card)', border: '1px solid var(--border)', padding: '1.25rem' },
   sideTitle: { fontSize: 12, fontWeight: 600, color: '#a0a0b8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '0.75rem' },
   resGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 },

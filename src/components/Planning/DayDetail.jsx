@@ -67,7 +67,7 @@ export default function DayDetail({ date, planningId, onClose, readOnly = false,
         </div>
 
         {!readOnly && (
-          <div style={styles.addRow}>
+          <div style={styles.addRow} className="add-type-row">
             <span style={styles.addLabel}>Agregar</span>
             {TYPES.map(t => (
               <button key={t} className="add-type-btn" onClick={() => addPost(t)} disabled={adding !== null}>
@@ -77,7 +77,7 @@ export default function DayDetail({ date, planningId, onClose, readOnly = false,
           </div>
         )}
 
-        <div style={styles.postsList}>
+        <div style={styles.postsList} className="posts-list">
           {addError && <div style={styles.errBox}>⚠ {addError}</div>}
           {loading && <p style={styles.msg}>Cargando...</p>}
           {!loading && posts.length === 0 && <p style={styles.msg}>No hay contenido en este día.</p>}
