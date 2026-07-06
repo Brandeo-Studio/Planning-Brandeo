@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import CommentBox from './CommentBox'
 
@@ -17,9 +17,25 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
   })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [moveDate, setMoveDate] = useState('')
 
   const mainImgRef = useRef()
   const refImgRef = useRef()
+  const menuRef = useRef()
+
+  useEffect(() => {
+    if (!menuOpen) return
+    function handleOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false)
+        setShowDatePicker(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [menuOpen])
 
   const isReel = post.type === 'reel'
   const mainImageLabel = isReel ? 'Diseño de portada' : 'Diseño final'
@@ -74,6 +90,14 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
     if (onDelete) onDelete(post.id)
   }
 
+  async function handleMove() {
+    if (!moveDate) return
+    await supabase.from('posts').update({ date: moveDate }).eq('id', post.id)
+    setMenuOpen(false)
+    setShowDatePicker(false)
+    if (onDelete) onDelete(post.id)
+  }
+
   function addRefLink() { setForm(f => ({ ...f, ref_links: [...f.ref_links, ''] })) }
   function updateRefLink(i, val) { setForm(f => ({ ...f, ref_links: f.ref_links.map((l, j) => j === i ? val : l) })) }
   function removeRefLink(i) { setForm(f => ({ ...f, ref_links: f.ref_links.filter((_, j) => j !== i) })) }
@@ -91,7 +115,31 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 11, color: '#c0c0d8' }}>{expanded ? '▲' : '▼'}</span>
           {!readOnly && (
-            <button className="block-del-btn" onClick={e => { e.stopPropagation(); handleDelete() }}>✕</button>
+            <div ref={menuRef} style={{ position: 'relative' }}>
+              <button
+                className="block-menu-btn"
+                onClick={e => { e.stopPropagation(); setMenuOpen(v => !v); setShowDatePicker(false) }}
+              >⋯</button>
+              {menuOpen && (
+                <div style={bs.dropdown}>
+                  {!showDatePicker ? (
+                    <>
+                      <button className="drop-item" onClick={e => { e.stopPropagation(); setShowDatePicker(true) }}>Mover a...</button>
+                      <button className="drop-item drop-item--danger" onClick={e => { e.stopPropagation(); setMenuOpen(false); handleDelete() }}>Eliminar</button>
+                    </>
+                  ) : (
+                    <div style={bs.datePicker} onClick={e => e.stopPropagation()}>
+                      <div style={bs.dateLabel}>Mover a</div>
+                      <input type="date" value={moveDate} onChange={e => setMoveDate(e.target.value)} style={bs.dateInput} />
+                      <div style={bs.dateActions}>
+                        <button style={bs.cancelBtn} onClick={() => setShowDatePicker(false)}>Cancelar</button>
+                        <button style={bs.confirmBtn} onClick={handleMove} disabled={!moveDate}>Mover</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -273,4 +321,11 @@ const bs = {
   linkRm: { flexShrink: 0, width: 28, height: 28, borderRadius: '50%', border: 'none', background: '#f4f3ff', color: '#a0a0b8', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' },
   addLinkBtn: { marginTop: 8, padding: '6px 14px', borderRadius: 8, border: '1.5px dashed #c0c0d8', background: 'none', fontSize: 12, fontWeight: 600, color: '#6b6b8a', cursor: 'pointer', fontFamily: 'inherit' },
   linkItem: { display: 'block', fontSize: 12, color: '#6c63ff', marginTop: 4, wordBreak: 'break-all', textDecoration: 'none' },
+  dropdown: { position: 'absolute', right: 0, top: 'calc(100% + 4px)', background: '#fff', border: '1.5px solid #e4e3f7', borderRadius: 10, boxShadow: '0 6px 24px rgba(108,99,255,.16)', zIndex: 20, minWidth: 148, overflow: 'hidden' },
+  datePicker: { padding: '10px 12px' },
+  dateLabel: { fontSize: 11, fontWeight: 600, color: '#a0a0b8', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 6 },
+  dateInput: { width: '100%', padding: '6px 8px', borderRadius: 7, border: '1.5px solid #e4e3f7', fontSize: 13, fontFamily: 'inherit', color: '#1a1a2e', boxSizing: 'border-box' },
+  dateActions: { display: 'flex', gap: 6, marginTop: 8, justifyContent: 'flex-end' },
+  cancelBtn: { padding: '5px 11px', borderRadius: 7, border: '1.5px solid #e4e3f7', background: 'none', fontSize: 12, color: '#6b6b8a', cursor: 'pointer', fontFamily: 'inherit' },
+  confirmBtn: { padding: '5px 11px', borderRadius: 7, border: 'none', background: '#6c63ff', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' },
 }
