@@ -5,6 +5,16 @@ import CommentBox from './CommentBox'
 
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const TYPE_LABELS = { historia: 'Historia', posteo: 'Posteo', reel: 'Reel', carrusel: 'Carrusel' }
+
+function parseCarouselImages(imageUrl) {
+  if (!imageUrl) return []
+  try {
+    const parsed = JSON.parse(imageUrl)
+    return Array.isArray(parsed) ? parsed : [imageUrl]
+  } catch {
+    return [imageUrl]
+  }
+}
 const TYPE_BG = { historia: '#ebebff', posteo: '#e0faf3', reel: '#fff0ec', carrusel: '#f8eaff' }
 const TYPE_TC = { historia: '#6c63ff', posteo: '#1a9e7a', reel: '#d84315', carrusel: '#7b1fa2' }
 
@@ -21,7 +31,7 @@ function arrowStyle(side) {
 function PostModal({ post, onClose, onEditDay, readOnly }) {
   const [idx, setIdx] = useState(0)
   const images = post.type === 'carrusel'
-    ? (post.carousel_images || [])
+    ? parseCarouselImages(post.image_url)
     : (post.image_url ? [post.image_url] : [])
 
   const dateLabel = post.date
@@ -96,7 +106,7 @@ export default function FeedView({ planningId, readOnly = false, year, month, on
   }
 
   function getCellImage(p) {
-    if (p.type === 'carrusel' && p.carousel_images?.length > 0) return p.carousel_images[0]
+    if (p.type === 'carrusel') return parseCarouselImages(p.image_url)[0] || null
     return p.image_url || null
   }
 
@@ -161,8 +171,8 @@ export default function FeedView({ planningId, readOnly = false, year, month, on
                   ▶
                 </button>
               )}
-              {p.type === 'carrusel' && (p.carousel_images || []).length > 1 && (
-                <div style={s.badge}>⊞ {p.carousel_images.length}</div>
+              {p.type === 'carrusel' && parseCarouselImages(p.image_url).length > 1 && (
+                <div style={s.badge}>⊞ {parseCarouselImages(p.image_url).length}</div>
               )}
               <div className="f-ov">
                 <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,.3)', padding: '2px 7px', borderRadius: 20, marginBottom: 3 }}>
