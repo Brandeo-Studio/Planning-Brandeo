@@ -103,6 +103,7 @@ export default function PlanningPage() {
   if (!client || !planning) return <div style={s.center}>Cargando...</div>
 
   const clientUrl = `${window.location.origin}/cliente/${client.slug}`
+  const commentMode = profile?.role === 'admin' ? 'admin' : 'cm'
 
   return (
     <div style={{ minHeight: '100vh' }}>
@@ -136,6 +137,7 @@ export default function PlanningPage() {
                 planningId={planning.id}
                 year={year}
                 month={month}
+                commentMode={commentMode}
                 onPrev={prevMonth}
                 onNext={nextMonth}
               />
@@ -239,6 +241,7 @@ export default function PlanningPage() {
             planningId={planning.id}
             year={year}
             month={month}
+            commentMode={commentMode}
             onPrev={prevMonth}
             onNext={nextMonth}
           />
@@ -249,6 +252,7 @@ export default function PlanningPage() {
             planningId={planning.id}
             year={year}
             month={month}
+            commentMode={commentMode}
             onPrev={prevMonth}
             onNext={nextMonth}
           />

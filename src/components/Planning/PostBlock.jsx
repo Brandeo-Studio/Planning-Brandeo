@@ -16,7 +16,7 @@ function parseCarouselImages(imageUrl) {
   }
 }
 
-export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }) {
+export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, commentMode = 'admin' }) {
   const [expanded, setExpanded] = useState(false)
   const [form, setForm] = useState({
     ...post,
@@ -349,7 +349,7 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
           )}
 
           {/* 9. Comments */}
-          <CommentBox postId={post.id} readOnly={false} />
+          <CommentBox postId={post.id} commentMode={commentMode} />
         </div>
       )}
     </div>

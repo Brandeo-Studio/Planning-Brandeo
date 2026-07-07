@@ -5,7 +5,7 @@ import PostBlock from './PostBlock'
 const TYPES = ['historia', 'posteo', 'reel', 'carrusel']
 const TYPE_LABELS = { historia: '● Historia', posteo: '■ Posteo', reel: '▶ Reel', carrusel: '⊞ Carrusel' }
 
-export default function DayDetail({ date, planningId, onClose, readOnly = false, onPostsChanged }) {
+export default function DayDetail({ date, planningId, onClose, readOnly = false, commentMode = 'admin', onPostsChanged }) {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(null)
@@ -82,7 +82,7 @@ export default function DayDetail({ date, planningId, onClose, readOnly = false,
           {loading && <p style={styles.msg}>Cargando...</p>}
           {!loading && posts.length === 0 && <p style={styles.msg}>No hay contenido en este día.</p>}
           {posts.map(p => (
-            <PostBlock key={p.id} post={p} onUpdate={handleUpdate} onDelete={handleDelete} readOnly={readOnly} />
+            <PostBlock key={p.id} post={p} onUpdate={handleUpdate} onDelete={handleDelete} readOnly={readOnly} commentMode={commentMode} />
           ))}
         </div>
       </div>

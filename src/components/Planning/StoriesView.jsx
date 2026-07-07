@@ -65,7 +65,7 @@ function StoryPhone({ story, onClick }) {
   )
 }
 
-function StoryModal({ story, onClose, onEditDay, readOnly }) {
+function StoryModal({ story, onClose, onEditDay, readOnly, commentMode = 'admin' }) {
   const date = story.date ? new Date(story.date + 'T00:00:00') : null
   const dateLabel = date
     ? date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -101,14 +101,14 @@ function StoryModal({ story, onClose, onEditDay, readOnly }) {
               ✎ Editar este día
             </button>
           )}
-          <CommentBox postId={story.id} readOnly={false} />
+          <CommentBox postId={story.id} commentMode={commentMode} />
         </div>
       </div>
     </div>
   )
 }
 
-export default function StoriesView({ planningId, readOnly = false, year, month, onPrev, onNext }) {
+export default function StoriesView({ planningId, readOnly = false, commentMode = 'admin', year, month, onPrev, onNext }) {
   const [stories, setStories] = useState([])
   const [selected, setSelected] = useState(null)
   const [modalStory, setModalStory] = useState(null)
@@ -180,10 +180,11 @@ export default function StoriesView({ planningId, readOnly = false, year, month,
           onClose={() => setModalStory(null)}
           onEditDay={date => { setSelected(date); setModalStory(null) }}
           readOnly={readOnly}
+          commentMode={commentMode}
         />
       )}
       {selected && (
-        <DayDetail date={selected} planningId={planningId} onClose={() => setSelected(null)} readOnly={readOnly} />
+        <DayDetail date={selected} planningId={planningId} onClose={() => setSelected(null)} readOnly={readOnly} commentMode={commentMode} />
       )}
     </div>
   )

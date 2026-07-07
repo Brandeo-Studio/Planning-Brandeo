@@ -13,7 +13,7 @@ const CTAG = {
   carrusel: { fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.4, background: '#f8eaff', color: '#7b1fa2' },
 }
 
-export default function CalendarView({ planningId, year, month, readOnly = false, onPrev, onNext }) {
+export default function CalendarView({ planningId, year, month, readOnly = false, commentMode = 'admin', onPrev, onNext }) {
   const [posts, setPosts] = useState([])
   const [commentedDates, setCommentedDates] = useState(new Set())
   const [selectedDate, setSelectedDate] = useState(null)
@@ -102,6 +102,7 @@ export default function CalendarView({ planningId, year, month, readOnly = false
           planningId={planningId}
           onClose={() => setSelectedDate(null)}
           readOnly={readOnly}
+          commentMode={commentMode}
           onPostsChanged={fetchPosts}
         />
       )}

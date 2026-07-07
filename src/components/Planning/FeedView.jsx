@@ -28,7 +28,7 @@ function arrowStyle(side) {
   }
 }
 
-function PostModal({ post, onClose, onEditDay, readOnly }) {
+function PostModal({ post, onClose, onEditDay, readOnly, commentMode = 'admin' }) {
   const [idx, setIdx] = useState(0)
   const images = post.type === 'carrusel'
     ? parseCarouselImages(post.image_url)
@@ -82,14 +82,14 @@ function PostModal({ post, onClose, onEditDay, readOnly }) {
               ✎ Editar este día
             </button>
           )}
-          <CommentBox postId={post.id} readOnly={false} />
+          <CommentBox postId={post.id} commentMode={commentMode} />
         </div>
       </div>
     </div>
   )
 }
 
-export default function FeedView({ planningId, readOnly = false, year, month, onPrev, onNext }) {
+export default function FeedView({ planningId, readOnly = false, commentMode = 'admin', year, month, onPrev, onNext }) {
   const [posts, setPosts] = useState([])
   const [modalPost, setModalPost] = useState(null)
   const [editDate, setEditDate] = useState(null)
@@ -195,10 +195,11 @@ export default function FeedView({ planningId, readOnly = false, year, month, on
           onClose={() => setModalPost(null)}
           onEditDay={date => setEditDate(date)}
           readOnly={readOnly}
+          commentMode={commentMode}
         />
       )}
       {editDate && (
-        <DayDetail date={editDate} planningId={planningId} onClose={() => setEditDate(null)} readOnly={readOnly} />
+        <DayDetail date={editDate} planningId={planningId} onClose={() => setEditDate(null)} readOnly={readOnly} commentMode={commentMode} />
       )}
     </div>
   )

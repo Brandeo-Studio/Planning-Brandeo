@@ -107,7 +107,7 @@ export default function ClientPublicPage() {
         ) : tab === 'Calendario' ? (
           <div className="client-cal-layout">
             <div className="client-cal-main" style={styles.content}>
-              <CalendarView planningId={planning.id} year={year} month={month} readOnly />
+              <CalendarView planningId={planning.id} year={year} month={month} readOnly commentMode="client" />
             </div>
             <div className="client-cal-sidebar">
               <div style={styles.sideCard}>
@@ -135,8 +135,8 @@ export default function ClientPublicPage() {
           </div>
         ) : (
           <div style={styles.content}>
-            {tab === 'Feed' && <FeedView planningId={planning.id} readOnly />}
-            {tab === 'Historias' && <StoriesView planningId={planning.id} readOnly />}
+            {tab === 'Feed' && <FeedView planningId={planning.id} readOnly commentMode="client" />}
+            {tab === 'Historias' && <StoriesView planningId={planning.id} readOnly commentMode="client" />}
           </div>
         )}
 
