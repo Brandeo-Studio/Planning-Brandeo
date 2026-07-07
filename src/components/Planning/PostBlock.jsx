@@ -6,6 +6,16 @@ const TYPE_LABELS = { historia: 'Historia', posteo: 'Posteo', reel: 'Reel', carr
 const TYPE_BG = { historia: '#ebebff', posteo: '#e0faf3', reel: '#fff0ec', carrusel: '#f8eaff' }
 const TYPE_TC = { historia: '#6c63ff', posteo: '#1a9e7a', reel: '#d84315', carrusel: '#7b1fa2' }
 
+function parseCarouselImages(imageUrl) {
+  if (!imageUrl) return []
+  try {
+    const parsed = JSON.parse(imageUrl)
+    return Array.isArray(parsed) ? parsed : [imageUrl]
+  } catch {
+    return [imageUrl]
+  }
+}
+
 export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }) {
   const [expanded, setExpanded] = useState(false)
   const [form, setForm] = useState({
@@ -14,6 +24,7 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
     ref_links: post.ref_links || [],
     notes: post.notes || '',
     delivery_link: post.delivery_link || '',
+    main_images: post.type === 'carrusel' ? parseCarouselImages(post.image_url) : [],
   })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -22,6 +33,7 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
   const [moveDate, setMoveDate] = useState('')
 
   const mainImgRef = useRef()
+  const mainImagesRef = useRef()
   const refImgRef = useRef()
   const menuRef = useRef()
 
@@ -68,12 +80,26 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
     e.target.value = ''
   }
 
+  async function handleCarouselMainImages(e) {
+    const files = Array.from(e.target.files); if (!files.length) return
+    setUploading('main')
+    const urls = await Promise.all(files.map((f, i) => {
+      const ext = f.name.split('.').pop()
+      return uploadFile(f, `posts/${post.id}/slides/${Date.now()}-${i}.${ext}`)
+    }))
+    setForm(f => ({ ...f, main_images: [...(f.main_images || []), ...urls] }))
+    setUploading(false)
+    e.target.value = ''
+  }
+
   async function handleSave() {
     setSaving(true)
     const { data } = await supabase.from('posts').update({
       title: form.title,
       copy: form.copy,
-      image_url: form.image_url || null,
+      image_url: post.type === 'carrusel'
+        ? (form.main_images.length ? JSON.stringify(form.main_images) : null)
+        : form.image_url || null,
       notes: form.notes || null,
       ref_images: form.ref_images,
       ref_links: form.ref_links,
@@ -149,9 +175,12 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
           {readOnly ? (
             /* Read-only */
             <div style={{ paddingTop: 4 }}>
-              {post.image_url && (
-                <img src={post.image_url} style={{ ...bs.imgPrev, marginTop: 8 }} alt="" />
-              )}
+              {post.type === 'carrusel'
+                ? parseCarouselImages(post.image_url).map((url, i) => (
+                    <img key={i} src={url} style={{ ...bs.imgPrev, marginTop: 8 }} alt={`slide ${i + 1}`} />
+                  ))
+                : post.image_url && <img src={post.image_url} style={{ ...bs.imgPrev, marginTop: 8 }} alt="" />
+              }
               {post.delivery_link && (
                 <>
                   <div style={bs.fieldLbl}>Link de entrega</div>
@@ -194,27 +223,51 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false }
 
               {/* 2. Diseño final / Diseño de portada */}
               <label style={bs.fieldLbl}>
-                {mainImageLabel}
+                {post.type === 'carrusel' ? 'Diseño final (slides)' : mainImageLabel}
                 {uploading === 'main' && <span style={bs.upTag}> Subiendo...</span>}
               </label>
-              <div className="img-area" onClick={() => mainImgRef.current?.click()}>
-                {form.image_url ? (
-                  <>
-                    <img src={form.image_url} style={bs.imgPrev} alt="preview" />
-                    <div style={{ fontSize: 11, color: '#a0a0b8', marginTop: 6 }}>Tocá para cambiar</div>
-                  </>
-                ) : (
-                  <>
-                    <div style={{ fontSize: 22, marginBottom: 4 }}>🖼</div>
-                    <div style={{ fontSize: 12, color: '#a0a0b8', fontWeight: 500 }}>Tocá para subir imagen</div>
-                  </>
-                )}
-                <input ref={mainImgRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleMainImage} disabled={!!uploading} />
-              </div>
-              {form.image_url && (
-                <button style={bs.removeImgBtn} onClick={() => setForm(f => ({ ...f, image_url: '' }))}>
-                  ✕ Quitar imagen
-                </button>
+              {post.type === 'carrusel' ? (
+                <>
+                  {form.main_images.length > 0 && (
+                    <div style={bs.refGrid}>
+                      {form.main_images.map((url, i) => (
+                        <div key={i} style={bs.refThumbWrap}>
+                          <img src={url} style={bs.refThumb} alt={`slide ${i + 1}`} />
+                          <button style={bs.refRm} onClick={() => setForm(f => ({ ...f, main_images: f.main_images.filter((_, j) => j !== i) }))}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="car-add" onClick={() => mainImagesRef.current?.click()}>
+                    <div style={{ fontSize: 16, marginBottom: 3 }}>🖼</div>
+                    <div style={{ fontSize: 12, color: '#a0a0b8', fontWeight: 500 }}>
+                      {form.main_images.length ? 'Agregar más slides' : 'Agregar imágenes del carrusel'}
+                    </div>
+                    <input ref={mainImagesRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleCarouselMainImages} disabled={!!uploading} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="img-area" onClick={() => mainImgRef.current?.click()}>
+                    {form.image_url ? (
+                      <>
+                        <img src={form.image_url} style={bs.imgPrev} alt="preview" />
+                        <div style={{ fontSize: 11, color: '#a0a0b8', marginTop: 6 }}>Tocá para cambiar</div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: 22, marginBottom: 4 }}>🖼</div>
+                        <div style={{ fontSize: 12, color: '#a0a0b8', fontWeight: 500 }}>Tocá para subir imagen</div>
+                      </>
+                    )}
+                    <input ref={mainImgRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleMainImage} disabled={!!uploading} />
+                  </div>
+                  {form.image_url && (
+                    <button style={bs.removeImgBtn} onClick={() => setForm(f => ({ ...f, image_url: '' }))}>
+                      ✕ Quitar imagen
+                    </button>
+                  )}
+                </>
               )}
 
               {/* 3. Link de entrega */}
