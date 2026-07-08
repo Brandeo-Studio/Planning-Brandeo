@@ -70,7 +70,7 @@ a { text-decoration: none; color: inherit; }
 
 @media (max-width: 767px) {
   .cell-tags-text { display: none; }
-  .cell-tags-icons { display: flex; }
+  .cell-tags-icons { display: flex; flex-direction: column; align-items: center; }
 }
 
 /* === Tabs underline === */
