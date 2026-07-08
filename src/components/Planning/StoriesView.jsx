@@ -6,10 +6,10 @@ import CommentBox from './CommentBox'
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const DAYS_SHORT = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 
-function weekOfMonth(dateStr, year, month) {
+function weekOfMonth(dateStr) {
   if (!dateStr) return 99
-  const [, , d] = dateStr.split('-').map(Number)
-  const firstDay = new Date(year, month - 1, 1).getDay()
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const firstDay = new Date(y, m - 1, 1).getDay()
   return Math.ceil((d + firstDay) / 7)
 }
 
@@ -128,7 +128,7 @@ export default function StoriesView({ planningId, readOnly = false, commentMode 
   // Group by week
   const grouped = {}
   stories.forEach(s => {
-    const w = weekOfMonth(s.date, year, month)
+    const w = weekOfMonth(s.date)
     if (!grouped[w]) grouped[w] = []
     grouped[w].push(s)
   })

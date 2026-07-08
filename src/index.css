@@ -65,6 +65,13 @@ a { text-decoration: none; color: inherit; }
 .cal-cell.has-content { border-color: #e4e3f7; background: #f0efff; }
 .cal-cell.has-content:hover { background: #e0dfff; border-color: #c5c4f5; }
 
+.cell-tags-icons { display: none; }
+
+@media (max-width: 767px) {
+  .cell-tags-text { display: none; }
+  .cell-tags-icons { display: flex; }
+}
+
 /* === Tabs underline === */
 .tab-ul { padding: 10px 16px; border: none; border-bottom: 2.5px solid transparent; background: none; font-size: 13px; font-weight: 600; color: #6b6b8a; cursor: pointer; font-family: inherit; white-space: nowrap; transition: color .15s; margin-bottom: -1.5px; }
 .tab-ul:hover { color: #6c63ff; }
@@ -132,6 +139,12 @@ a { text-decoration: none; color: inherit; }
   .client-cal-layout { grid-template-columns: 1fr; }
   .client-cal-main { order: 2; padding: 12px !important; }
   .client-cal-sidebar { order: 1; }
+}
+
+/* === Client public page — tabs bar full width on mobile === */
+@media (max-width: 767px) {
+  .client-tabs { width: 100% !important; }
+  .client-tab { flex: 1 !important; text-align: center; }
 }
 
 /* === Topbar — mobile two-row layout === */

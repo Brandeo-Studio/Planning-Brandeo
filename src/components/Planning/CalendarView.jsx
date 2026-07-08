@@ -5,6 +5,8 @@ import DayDetail from './DayDetail'
 const DAYS = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB']
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const TYPE_LABELS = { historia: 'Historia', posteo: 'Posteo', reel: 'Reel', carrusel: 'Carrusel' }
+const TYPE_ICONS = { historia: '●', posteo: '■', reel: '▶', carrusel: '⊞' }
+const TYPE_TC = { historia: '#6c63ff', posteo: '#1a9e7a', reel: '#d84315', carrusel: '#7b1fa2' }
 
 const CTAG = {
   historia: { fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.4, background: '#ebebff', color: '#6c63ff' },
@@ -48,6 +50,12 @@ export default function CalendarView({ planningId, year, month, readOnly = false
   function dateStr(d) { return `${year}-${pad(month)}-${pad(d)}` }
   function postsForDay(d) { return posts.filter(p => p.date === dateStr(d)) }
 
+  function typeCounts(dayPosts) {
+    const counts = {}
+    dayPosts.forEach(p => { counts[p.type] = (counts[p.type] || 0) + 1 })
+    return Object.entries(counts)
+  }
+
   const today = new Date()
   function isToday(d) {
     return today.getFullYear() === year && today.getMonth() + 1 === month && today.getDate() === d
@@ -83,11 +91,20 @@ export default function CalendarView({ planningId, year, month, readOnly = false
             >
               <div style={{ ...s.dayNum, color: tod ? '#fff' : '#1a1a2e' }}>{d}</div>
               {hasCont && (
-                <div style={s.cellTags}>
+                <div className="cell-tags-text" style={s.cellTags}>
                   {dayPosts.slice(0, 4).map(p => (
                     <div key={p.id} style={CTAG[p.type]}>
                       {p.title ? p.title.substring(0, 12) : TYPE_LABELS[p.type]}
                     </div>
+                  ))}
+                </div>
+              )}
+              {hasCont && (
+                <div className="cell-tags-icons" style={s.cellTagsIcons}>
+                  {typeCounts(dayPosts).map(([type, count]) => (
+                    <span key={type} style={{ ...s.iconTag, color: TYPE_TC[type] }}>
+                      {TYPE_ICONS[type]}{count > 1 ? count : ''}
+                    </span>
                   ))}
                 </div>
               )}
@@ -118,4 +135,6 @@ const s = {
   grid: { display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 4 },
   dayNum: { fontSize: 12, fontWeight: 600, lineHeight: 1, marginBottom: 4, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   cellTags: { display: 'flex', flexDirection: 'column', gap: 2 },
+  cellTagsIcons: { display: 'flex', flexWrap: 'wrap', gap: 3 },
+  iconTag: { fontSize: 10, fontWeight: 700, lineHeight: 1 },
 }

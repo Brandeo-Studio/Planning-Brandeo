@@ -111,7 +111,7 @@ export default function CommentBox({ postId, commentMode = 'admin', onChange }) 
     return false
   }
 
-  function canReopen() { return commentMode === 'admin' }
+  function canReopen(c) { return canResolve(c) }
 
   function canEditDelete(c) {
     if (commentMode === 'admin') return true
@@ -121,7 +121,7 @@ export default function CommentBox({ postId, commentMode = 'admin', onChange }) 
 
   function renderComment(c, { resolved }) {
     const editing = editingId === c.id
-    const showMenu = canEditDelete(c) || (resolved && canReopen())
+    const showMenu = canEditDelete(c) || (resolved && canReopen(c))
 
     return (
       <div key={c.id} style={styles.comment}>
@@ -143,7 +143,7 @@ export default function CommentBox({ postId, commentMode = 'admin', onChange }) 
                       {canEditDelete(c) && (
                         <button className="drop-item drop-item--danger" onClick={() => handleDelete(c.id)}>Borrar</button>
                       )}
-                      {resolved && canReopen() && (
+                      {resolved && canReopen(c) && (
                         <button className="drop-item" onClick={() => handleSetResolved(c.id, false)}>Reabrir</button>
                       )}
                     </div>
