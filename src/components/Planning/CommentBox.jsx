@@ -21,7 +21,7 @@ function addMyCommentId(id) {
   }
 }
 
-export default function CommentBox({ postId, commentMode = 'admin' }) {
+export default function CommentBox({ postId, commentMode = 'admin', onChange }) {
   const [comments, setComments] = useState([])
   const [author, setAuthor] = useState('')
   const [content, setContent] = useState('')
@@ -64,18 +64,21 @@ export default function CommentBox({ postId, commentMode = 'admin' }) {
     setContent('')
     setSaving(false)
     fetchComments()
+    if (onChange) onChange()
   }
 
   async function handleDelete(id) {
     setMenuOpenId(null)
     await supabase.from('comments').delete().eq('id', id)
     setComments(c => c.filter(x => x.id !== id))
+    if (onChange) onChange()
   }
 
   async function handleSetResolved(id, resolved) {
     setMenuOpenId(null)
     await supabase.from('comments').update({ resolved }).eq('id', id)
     setComments(c => c.map(x => x.id === id ? { ...x, resolved } : x))
+    if (onChange) onChange()
   }
 
   function startEdit(c) {

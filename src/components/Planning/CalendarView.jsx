@@ -32,7 +32,7 @@ export default function CalendarView({ planningId, year, month, readOnly = false
 
   async function fetchCommentedDates(postData) {
     const ids = postData.map(p => p.id)
-    const { data } = await supabase.from('comments').select('post_id').in('post_id', ids)
+    const { data } = await supabase.from('comments').select('post_id').eq('resolved', false).in('post_id', ids)
     if (!data || data.length === 0) { setCommentedDates(new Set()); return }
     const commentedIds = new Set(data.map(c => c.post_id))
     setCommentedDates(new Set(postData.filter(p => commentedIds.has(p.id)).map(p => p.date)))

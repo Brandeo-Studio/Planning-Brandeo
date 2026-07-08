@@ -6,9 +6,10 @@ import Topbar from '../components/Layout/Topbar'
 import CalendarView from '../components/Planning/CalendarView'
 import FeedView from '../components/Planning/FeedView'
 import StoriesView from '../components/Planning/StoriesView'
+import CommentsView from '../components/Planning/CommentsView'
 
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
-const TABS = ['Calendario', 'Preview feed', 'Preview historias']
+const TABS = ['Calendario', 'Preview feed', 'Preview historias', 'Comentarios']
 
 const TIPO_SUMMARY = [
   { key: 'historia',  label: 'Historias', bg: '#ebebff', color: '#6c63ff' },
@@ -249,6 +250,17 @@ export default function PlanningPage() {
 
         {tab === 'Preview historias' && (
           <StoriesView
+            planningId={planning.id}
+            year={year}
+            month={month}
+            commentMode={commentMode}
+            onPrev={prevMonth}
+            onNext={nextMonth}
+          />
+        )}
+
+        {tab === 'Comentarios' && (
+          <CommentsView
             planningId={planning.id}
             year={year}
             month={month}

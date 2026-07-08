@@ -16,7 +16,7 @@ function parseCarouselImages(imageUrl) {
   }
 }
 
-export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, commentMode = 'admin' }) {
+export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, commentMode = 'admin', hasComments = false, onCommentsChange }) {
   const [expanded, setExpanded] = useState(false)
   const [form, setForm] = useState({
     ...post,
@@ -129,12 +129,13 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
   function removeRefLink(i) { setForm(f => ({ ...f, ref_links: f.ref_links.filter((_, j) => j !== i) })) }
 
   return (
-    <div style={bs.card}>
+    <div style={hasComments ? { ...bs.card, background: '#fffde7', border: '1.5px solid #f0c040' } : bs.card}>
       {/* Header */}
       <div style={bs.head} onClick={() => setExpanded(v => !v)}>
         <span style={{ ...bs.badge, background: TYPE_BG[post.type], color: TYPE_TC[post.type] }}>
           {TYPE_LABELS[post.type]}
         </span>
+        {hasComments && <span style={bs.commentDot} title="Comentarios sin resolver" />}
         {post.title && post.title !== 'Sin título' && (
           <span style={bs.headTitle}>{post.title}</span>
         )}
@@ -349,7 +350,7 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
           )}
 
           {/* 9. Comments */}
-          <CommentBox postId={post.id} commentMode={commentMode} />
+          <CommentBox postId={post.id} commentMode={commentMode} onChange={onCommentsChange} />
         </div>
       )}
     </div>
@@ -360,6 +361,7 @@ const bs = {
   card: { border: '1.5px solid #e4e3f7', borderRadius: 14, padding: '1rem', marginBottom: 10, background: '#fff' },
   head: { display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' },
   badge: { fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 20, flexShrink: 0 },
+  commentDot: { width: 8, height: 8, borderRadius: '50%', background: '#f0c040', flexShrink: 0 },
   headTitle: { fontSize: 13, fontWeight: 600, color: '#1a1a2e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 },
   fieldLbl: { fontSize: 11, fontWeight: 600, color: '#a0a0b8', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4, marginTop: 10, display: 'block' },
   upTag: { color: '#6c63ff', fontWeight: 500, textTransform: 'none', letterSpacing: 0 },

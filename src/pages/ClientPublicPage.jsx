@@ -4,9 +4,10 @@ import { supabase } from '../lib/supabase'
 import CalendarView from '../components/Planning/CalendarView'
 import FeedView from '../components/Planning/FeedView'
 import StoriesView from '../components/Planning/StoriesView'
+import CommentsView from '../components/Planning/CommentsView'
 
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
-const TABS = ['Calendario', 'Feed', 'Historias']
+const TABS = ['Calendario', 'Feed', 'Historias', 'Comentarios']
 
 const TIPO_SUMMARY = [
   { key: 'historia',  label: 'Historias', bg: '#ebebff', color: '#6c63ff' },
@@ -137,6 +138,7 @@ export default function ClientPublicPage() {
           <div style={styles.content}>
             {tab === 'Feed' && <FeedView planningId={planning.id} readOnly commentMode="client" />}
             {tab === 'Historias' && <StoriesView planningId={planning.id} readOnly commentMode="client" />}
+            {tab === 'Comentarios' && <CommentsView planningId={planning.id} commentMode="client" />}
           </div>
         )}
 

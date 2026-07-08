@@ -101,7 +101,7 @@ export default function FeedView({ planningId, readOnly = false, commentMode = '
       .from('posts').select('*')
       .eq('planning_id', planningId)
       .in('type', ['posteo', 'carrusel', 'reel'])
-      .order('date').order('created_at')
+      .order('date', { ascending: false }).order('created_at', { ascending: false })
     setPosts(data || [])
   }
 
@@ -178,6 +178,9 @@ export default function FeedView({ planningId, readOnly = false, commentMode = '
                 <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,.3)', padding: '2px 7px', borderRadius: 20, marginBottom: 3 }}>
                   {TYPE_LABELS[p.type]}
                 </span>
+                {p.title && p.title !== 'Sin título' && (
+                  <span style={s.ovTitle}>{p.title}</span>
+                )}
                 <span style={{ fontSize: 11, fontWeight: 600, color: '#fff' }}>Día {dayNum}</span>
               </div>
             </div>
@@ -213,6 +216,7 @@ const s = {
   grid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3, borderRadius: 12, overflow: 'hidden' },
   badge: { position: 'absolute', top: 5, right: 5, background: 'rgba(0,0,0,.5)', borderRadius: 5, padding: '2px 5px', fontSize: 8, fontWeight: 700, color: '#fff' },
   playBtn: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 38, height: 38, borderRadius: '50%', background: 'rgba(0,0,0,.55)', border: '2px solid rgba(255,255,255,.8)', color: '#fff', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3, paddingLeft: 3 },
+  ovTitle: { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textAlign: 'center', fontSize: 10, fontWeight: 600, color: '#fff', padding: '0 10px', marginBottom: 3, lineHeight: 1.3 },
 }
 
 const modal = {

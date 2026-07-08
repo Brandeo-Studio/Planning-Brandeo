@@ -10,6 +10,7 @@ export default function DayDetail({ date, planningId, onClose, readOnly = false,
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(null)
   const [addError, setAddError] = useState('')
+  const [commentedPostIds, setCommentedPostIds] = useState(new Set())
 
   useEffect(() => { fetchPosts() }, [date, planningId])
 
@@ -21,8 +22,24 @@ export default function DayDetail({ date, planningId, onClose, readOnly = false,
       .eq('planning_id', planningId).eq('date', date)
       .order('created_at')
     if (error) console.error('fetchPosts error:', error)
-    setPosts(data || [])
+    const postData = data || []
+    setPosts(postData)
     setLoading(false)
+    await fetchCommentedPostIds(postData)
+  }
+
+  async function fetchCommentedPostIds(postData) {
+    const ids = postData.map(p => p.id)
+    if (ids.length === 0) { setCommentedPostIds(new Set()); return }
+    const { data } = await supabase
+      .from('comments').select('post_id')
+      .eq('resolved', false).in('post_id', ids)
+    setCommentedPostIds(new Set((data || []).map(c => c.post_id)))
+  }
+
+  function handleCommentsChange() {
+    fetchCommentedPostIds(posts)
+    if (onPostsChanged) onPostsChanged()
   }
 
   async function addPost(type) {
@@ -82,7 +99,16 @@ export default function DayDetail({ date, planningId, onClose, readOnly = false,
           {loading && <p style={styles.msg}>Cargando...</p>}
           {!loading && posts.length === 0 && <p style={styles.msg}>No hay contenido en este día.</p>}
           {posts.map(p => (
-            <PostBlock key={p.id} post={p} onUpdate={handleUpdate} onDelete={handleDelete} readOnly={readOnly} commentMode={commentMode} />
+            <PostBlock
+              key={p.id}
+              post={p}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+              readOnly={readOnly}
+              commentMode={commentMode}
+              hasComments={commentedPostIds.has(p.id)}
+              onCommentsChange={handleCommentsChange}
+            />
           ))}
         </div>
       </div>
