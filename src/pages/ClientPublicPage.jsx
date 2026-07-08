@@ -97,7 +97,14 @@ export default function ClientPublicPage() {
       <div style={styles.body} className="client-page-body">
         <div style={styles.tabs} className="client-tabs">
           {TABS.map(t => (
-            <button key={t} className="client-tab" style={{ ...styles.tab, ...(tab === t ? styles.tabActive : {}) }} onClick={() => setTab(t)}>{t}</button>
+            <button key={t} className="client-tab" style={{ ...styles.tab, ...(tab === t ? styles.tabActive : {}) }} onClick={() => setTab(t)}>
+              {t === 'Comentarios' ? (
+                <>
+                  <span className="tab-label-full">Comentarios</span>
+                  <span className="tab-label-icon">💬</span>
+                </>
+              ) : t}
+            </button>
           ))}
         </div>
 

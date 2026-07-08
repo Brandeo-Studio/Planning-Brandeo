@@ -148,6 +148,14 @@ a { text-decoration: none; color: inherit; }
   .client-tab { flex: 1 !important; text-align: center; }
 }
 
+/* === Client public page — Comentarios tab label vs icon === */
+.tab-label-icon { display: none; }
+
+@media (max-width: 767px) {
+  .tab-label-full { display: none; }
+  .tab-label-icon { display: inline; }
+}
+
 /* === Topbar — mobile two-row layout === */
 @media (max-width: 767px) {
   .topbar {
