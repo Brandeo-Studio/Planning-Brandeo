@@ -5,7 +5,7 @@ import DayDetail from './DayDetail'
 const DAYS = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB']
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const TYPE_LABELS = { historia: 'Historia', posteo: 'Posteo', reel: 'Reel', carrusel: 'Carrusel' }
-const TYPE_ICONS = { historia: '●', posteo: '■', reel: '▶', carrusel: '⊞' }
+const TYPE_ICONS = { historia: 'H', posteo: 'P', reel: 'R', carrusel: 'C' }
 const TYPE_TC = { historia: '#6c63ff', posteo: '#1a9e7a', reel: '#d84315', carrusel: '#7b1fa2' }
 
 const CTAG = {
@@ -135,6 +135,6 @@ const s = {
   grid: { display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 4 },
   dayNum: { fontSize: 12, fontWeight: 600, lineHeight: 1, marginBottom: 4, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   cellTags: { display: 'flex', flexDirection: 'column', gap: 2 },
-  cellTagsIcons: { display: 'flex', flexWrap: 'wrap', gap: 3 },
+  cellTagsIcons: { flexWrap: 'wrap', gap: 3 },
   iconTag: { fontSize: 10, fontWeight: 700, lineHeight: 1 },
 }
