@@ -65,6 +65,7 @@ a { text-decoration: none; color: inherit; }
 .cal-cell.has-content { border-color: #e4e3f7; background: #f0efff; }
 .cal-cell.has-content:hover { background: #e0dfff; border-color: #c5c4f5; }
 
+.cell-tags-text { display: flex; flex-direction: column; }
 .cell-tags-icons { display: none; }
 
 @media (max-width: 767px) {
