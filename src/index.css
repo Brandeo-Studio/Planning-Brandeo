@@ -175,6 +175,7 @@ a { text-decoration: none; color: inherit; }
 
 @media (max-width: 767px) {
   .cm-view-pad { padding: 5% !important; }
+  .cm-tabs-bar { padding-left: 5% !important; padding-right: 5% !important; }
   .cm-cal-layout { grid-template-columns: 1fr; max-width: 100%; }
   .cm-cal-main { order: 2; padding: 12px !important; }
   .cm-cal-sidebar { order: 1; }

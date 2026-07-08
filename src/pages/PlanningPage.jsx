@@ -118,10 +118,15 @@ export default function PlanningPage() {
       </Topbar>
 
       {/* Tab bar — underline style, full width */}
-      <div style={s.tabsBar}>
+      <div style={s.tabsBar} className="cm-tabs-bar">
         {TABS.map(t => (
           <button key={t} className={`tab-ul${tab === t ? ' is-active' : ''}`} onClick={() => setTab(t)}>
-            {t}
+            {t === 'Comentarios' ? (
+              <>
+                <span className="tab-label-full">Comentarios</span>
+                <span className="tab-label-icon">💬</span>
+              </>
+            ) : t}
           </button>
         ))}
       </div>
