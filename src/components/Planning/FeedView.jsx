@@ -15,6 +15,13 @@ function parseCarouselImages(imageUrl) {
     return [imageUrl]
   }
 }
+
+const VIDEO_EXTENSIONS = ['mp4', 'mov', 'webm', 'avi', 'mkv', 'm4v', 'ogg']
+function isVideoUrl(url) {
+  if (!url) return false
+  const ext = url.split('.').pop().split('?')[0].toLowerCase()
+  return VIDEO_EXTENSIONS.includes(ext)
+}
 const TYPE_BG = { historia: '#ebebff', posteo: '#e0faf3', reel: '#fff0ec', carrusel: '#f8eaff' }
 const TYPE_TC = { historia: '#6c63ff', posteo: '#1a9e7a', reel: '#d84315', carrusel: '#7b1fa2' }
 
@@ -32,7 +39,7 @@ function PostModal({ post, onClose, onEditDay, readOnly, commentMode = 'admin' }
   const [idx, setIdx] = useState(0)
   const images = post.type === 'carrusel'
     ? parseCarouselImages(post.image_url)
-    : (post.image_url ? [post.image_url] : [])
+    : (post.image_url ? [post.image_url] : (post.video_url ? [post.video_url] : []))
 
   const dateLabel = post.date
     ? new Date(post.date + 'T00:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -55,7 +62,10 @@ function PostModal({ post, onClose, onEditDay, readOnly, commentMode = 'admin' }
             <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
               {post.type === 'carrusel' ? (
                 <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', background: '#e4e3f7' }}>
-                  <img src={images[idx]} style={{ width: '100%', objectFit: 'contain', display: 'block', maxHeight: 480, background: '#1a1a2e' }} alt="" />
+                  {isVideoUrl(images[idx])
+                    ? <video src={images[idx]} controls style={{ width: '100%', objectFit: 'contain', display: 'block', maxHeight: 480, background: '#1a1a2e' }} />
+                    : <img src={images[idx]} style={{ width: '100%', objectFit: 'contain', display: 'block', maxHeight: 480, background: '#1a1a2e' }} alt="" />
+                  }
                   {images.length > 1 && (
                     <>
                       <button onClick={() => setIdx(i => (i - 1 + images.length) % images.length)} style={arrowStyle('left')}>←</button>
@@ -66,6 +76,8 @@ function PostModal({ post, onClose, onEditDay, readOnly, commentMode = 'admin' }
                     </>
                   )}
                 </div>
+              ) : isVideoUrl(images[0]) ? (
+                <video src={images[0]} controls style={{ width: '100%', borderRadius: 10, objectFit: 'contain', display: 'block', maxHeight: 500, background: '#1a1a2e' }} />
               ) : (
                 <img src={images[0]} style={{ width: '100%', borderRadius: 10, objectFit: 'contain', display: 'block', maxHeight: 500, background: '#f4f3ff' }} alt="" />
               )}
@@ -105,9 +117,14 @@ export default function FeedView({ planningId, readOnly = false, commentMode = '
     setPosts(data || [])
   }
 
-  function getCellImage(p) {
-    if (p.type === 'carrusel') return parseCarouselImages(p.image_url)[0] || null
-    return p.image_url || null
+  function getCellMedia(p) {
+    if (p.type === 'carrusel') {
+      const first = parseCarouselImages(p.image_url)[0]
+      return first ? { url: first, video: isVideoUrl(first) } : null
+    }
+    if (p.image_url) return { url: p.image_url, video: false }
+    if (p.video_url) return { url: p.video_url, video: true }
+    return null
   }
 
   const monthLabel = year && month ? `${MONTH_NAMES[month - 1]} ${year}` : ''
@@ -139,20 +156,20 @@ export default function FeedView({ planningId, readOnly = false, commentMode = '
               <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#a0a0b8', fontWeight: 500 }}>vacío</div>
             </div>
           )
-          const img = getCellImage(p)
+          const media = getCellMedia(p)
           const dayNum = p.date ? new Date(p.date + 'T00:00:00').getDate() : ''
           return (
             <div key={p.id} className="f-cell" onClick={() => setModalPost(p)}>
-              {img
-                ? <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
-                : p.video_url
+              {media
+                ? media.video
                   ? (
                     <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#1a1a2e,#2d2b6e)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                       <span style={{ fontSize: 28, color: '#fff' }}>▶</span>
                       <span style={{ fontSize: 9, color: 'rgba(255,255,255,.7)', fontWeight: 600 }}>Video</span>
                     </div>
                   )
-                  : (
+                  : <img src={media.url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
+                : (
                     <div style={{ width: '100%', height: '100%', background: TYPE_BG[p.type], display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
                       <span style={{ fontSize: 20 }}>
                         {p.type === 'reel' ? '▶' : p.type === 'carrusel' ? '⊞' : '■'}
@@ -162,15 +179,6 @@ export default function FeedView({ planningId, readOnly = false, commentMode = '
                     </div>
                   )
               }
-              {/* Play button — opens video in new tab, doesn't trigger modal */}
-              {p.video_url && (
-                <button
-                  style={s.playBtn}
-                  onClick={e => { e.stopPropagation(); window.open(p.video_url, '_blank', 'noopener') }}
-                >
-                  ▶
-                </button>
-              )}
               {p.type === 'carrusel' && parseCarouselImages(p.image_url).length > 1 && (
                 <div style={s.badge}>⊞ {parseCarouselImages(p.image_url).length}</div>
               )}
@@ -215,7 +223,6 @@ const s = {
   sub: { fontSize: 12, color: '#a0a0b8' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3, borderRadius: 12, overflow: 'hidden' },
   badge: { position: 'absolute', top: 5, right: 5, background: 'rgba(0,0,0,.5)', borderRadius: 5, padding: '2px 5px', fontSize: 8, fontWeight: 700, color: '#fff' },
-  playBtn: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 38, height: 38, borderRadius: '50%', background: 'rgba(0,0,0,.55)', border: '2px solid rgba(255,255,255,.8)', color: '#fff', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3, paddingLeft: 3 },
   ovTitle: { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textAlign: 'center', fontSize: 10, fontWeight: 600, color: '#fff', padding: '0 10px', marginBottom: 3, lineHeight: 1.3 },
 }
 

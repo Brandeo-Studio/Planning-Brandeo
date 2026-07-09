@@ -43,16 +43,6 @@ function StoryPhone({ story, onClick }) {
           <div style={st.progFill} />
         </div>
 
-        {/* Play button — opens video in new tab, doesn't open DayDetail */}
-        {story.video_url && (
-          <button
-            style={st.playBtn}
-            onClick={e => { e.stopPropagation(); window.open(story.video_url, '_blank', 'noopener') }}
-          >
-            ▶
-          </button>
-        )}
-
         {/* Gradient overlay at bottom with day label */}
         <div style={st.overlay}>
           <div style={st.dayLabel}>{dayShort} {dayNum}</div>
@@ -85,10 +75,7 @@ function StoryModal({ story, onClose, onEditDay, readOnly, commentMode = 'admin'
           {story.image_url ? (
             <img src={story.image_url} style={{ width: '100%', borderRadius: 10, objectFit: 'contain', display: 'block', maxHeight: 480, background: '#f4f3ff', marginBottom: '0.75rem' }} alt="" />
           ) : story.video_url ? (
-            <div style={{ width: '100%', aspectRatio: '9/16', maxHeight: 360, borderRadius: 10, background: 'linear-gradient(135deg,#1a1a2e,#2d2b6e)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: '0.75rem' }}>
-              <span style={{ fontSize: 36, color: '#fff' }}>▶</span>
-              <button style={sm.videoBtn} onClick={() => window.open(story.video_url, '_blank', 'noopener')}>Ver video</button>
-            </div>
+            <video src={story.video_url} controls style={{ width: '100%', aspectRatio: '9/16', maxHeight: 360, borderRadius: 10, background: '#1a1a2e', display: 'block', marginBottom: '0.75rem' }} />
           ) : (
             <div style={{ width: '100%', aspectRatio: '9/16', maxHeight: 360, borderRadius: 10, background: '#ebebff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: '#6c63ff' }}>Sin imagen</span>
@@ -201,7 +188,6 @@ const sm = {
   tema: { fontSize: 12, color: '#6b6b8a', marginBottom: '0.5rem' },
   copy: { fontSize: 13, color: '#1a1a2e', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '0.75rem' },
   editBtn: { width: '100%', padding: 9, borderRadius: 10, border: '1.5px solid #6c63ff', background: 'none', fontSize: 13, fontWeight: 600, color: '#6c63ff', cursor: 'pointer', fontFamily: 'inherit', marginTop: '0.5rem', marginBottom: '0.5rem' },
-  videoBtn: { padding: '8px 20px', borderRadius: 20, border: 'none', background: '#6c63ff', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' },
 }
 
 const PHONE_WIDTH = 140
@@ -239,7 +225,6 @@ const st = {
     height: 2, background: 'rgba(255,255,255,.3)', borderRadius: 2,
   },
   progFill: { height: '100%', width: '100%', background: '#fff', borderRadius: 2 },
-  playBtn: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 36, height: 36, borderRadius: '50%', background: 'rgba(0,0,0,.55)', border: '2px solid rgba(255,255,255,.8)', color: '#fff', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3, paddingLeft: 2 },
   overlay: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     padding: '10px 8px',
