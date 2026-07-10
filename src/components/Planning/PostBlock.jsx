@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { uploadToCloudinary } from '../../lib/cloudinary'
+import { uploadToCloudinary, videoThumbUrl, frameOffsetOf } from '../../lib/cloudinary'
 import CommentBox from './CommentBox'
 
 const TYPE_LABELS = { historia: 'Historia', posteo: 'Posteo', reel: 'Reel', carrusel: 'Carrusel' }
@@ -24,6 +24,13 @@ function isVideoUrl(url) {
   return VIDEO_EXTENSIONS.includes(ext)
 }
 
+function formatTime(sec) {
+  if (!isFinite(sec) || sec < 0) return '0:00'
+  const m = Math.floor(sec / 60)
+  const s = Math.floor(sec % 60)
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
 export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, commentMode = 'admin', hasComments = false, onCommentsChange }) {
   const [expanded, setExpanded] = useState(false)
   const [form, setForm] = useState({
@@ -40,11 +47,33 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [moveDate, setMoveDate] = useState('')
 
+  const initialFrameOffset = frameOffsetOf(post.image_url)
+  const [coverMode, setCoverMode] = useState(
+    !post.image_url ? 'auto' : (initialFrameOffset !== null ? 'frame' : 'upload')
+  )
+  const [sliderValue, setSliderValue] = useState(initialFrameOffset ?? 0)
+  const [videoDuration, setVideoDuration] = useState(0)
+
   const mainImgRef = useRef()
   const mainImagesRef = useRef()
   const refImgRef = useRef()
   const videoRef = useRef()
   const menuRef = useRef()
+  const frameVideoRef = useRef()
+  const frameCanvasRef = useRef()
+
+  function drawFrameToCanvas() {
+    const video = frameVideoRef.current
+    const canvas = frameCanvasRef.current
+    if (!video || !canvas || !video.videoWidth) return
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
+  }
+
+  function seekFramePicker(seconds) {
+    if (frameVideoRef.current) frameVideoRef.current.currentTime = seconds
+  }
 
   useEffect(() => {
     if (!menuOpen) return
@@ -60,7 +89,7 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
 
   const isReel = post.type === 'reel'
   const isHistoria = post.type === 'historia'
-  const mainImageLabel = isReel ? 'Diseño de portada' : 'Diseño final'
+  const mainImageLabel = isReel ? 'Portada para el feed' : 'Diseño final'
 
   async function uploadFile(file, path) {
     await supabase.storage.from('planning-media').upload(path, file, { upsert: true })
@@ -105,6 +134,8 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
     try {
       const url = await uploadToCloudinary(file)
       setForm(f => ({ ...f, video_url: url }))
+      setVideoDuration(0)
+      setSliderValue(0)
     } finally {
       setUploading(false)
       e.target.value = ''
@@ -247,7 +278,7 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
                 placeholder="Ej: Lanzamiento producto nuevo"
               />
 
-              {/* 2. Diseño final / Diseño de portada */}
+              {/* 2. Diseño final / Portada para el feed */}
               <label style={bs.fieldLbl}>
                 {post.type === 'carrusel' ? 'Diseño final (slides)' : mainImageLabel}
                 {uploading === 'main' && <span style={bs.upTag}> Subiendo...</span>}
@@ -275,6 +306,112 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
                     </div>
                     <input ref={mainImagesRef} type="file" accept="image/*,video/*" multiple style={{ display: 'none' }} onChange={handleCarouselMainImages} disabled={!!uploading} />
                   </div>
+                </>
+              ) : isReel ? (
+                <>
+                  <div style={bs.coverTabs}>
+                    <button
+                      type="button"
+                      style={coverMode === 'auto' ? bs.coverTabActive : bs.coverTab}
+                      onClick={() => { setCoverMode('auto'); setForm(f => ({ ...f, image_url: '' })) }}
+                    >Automática</button>
+                    <button
+                      type="button"
+                      style={coverMode === 'frame' ? bs.coverTabActive : bs.coverTab}
+                      onClick={() => setCoverMode('frame')}
+                      disabled={!form.video_url}
+                    >Elegir frame</button>
+                    <button
+                      type="button"
+                      style={coverMode === 'upload' ? bs.coverTabActive : bs.coverTab}
+                      onClick={() => setCoverMode('upload')}
+                    >Subir imagen</button>
+                  </div>
+
+                  {coverMode === 'auto' && (
+                    form.video_url ? (
+                      <div className="img-area" style={{ cursor: 'default' }}>
+                        <img src={videoThumbUrl(form.video_url)} style={bs.imgPrev} alt="portada automática" />
+                        <div style={{ fontSize: 11, color: '#a0a0b8', marginTop: 6 }}>Se usará el primer frame del video</div>
+                      </div>
+                    ) : (
+                      <div style={bs.coverHint}>Subí un video para ver la portada automática</div>
+                    )
+                  )}
+
+                  {coverMode === 'frame' && (
+                    form.video_url ? (
+                      <>
+                        <video
+                          ref={frameVideoRef}
+                          src={form.video_url}
+                          crossOrigin="anonymous"
+                          preload="auto"
+                          muted
+                          playsInline
+                          style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+                          onLoadedMetadata={e => { setVideoDuration(e.currentTarget.duration); seekFramePicker(sliderValue) }}
+                          onLoadedData={drawFrameToCanvas}
+                          onSeeked={drawFrameToCanvas}
+                        />
+                        <canvas ref={frameCanvasRef} style={bs.imgPrev} />
+                        <input
+                          type="range"
+                          min={0}
+                          max={videoDuration || 0}
+                          step={0.1}
+                          value={Math.min(sliderValue, videoDuration || 0)}
+                          onChange={e => {
+                            const t = parseFloat(e.target.value)
+                            setSliderValue(t)
+                            seekFramePicker(t)
+                          }}
+                          disabled={!videoDuration}
+                          style={{ width: '100%', marginTop: 8 }}
+                        />
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                          <span style={{ fontSize: 11, color: '#a0a0b8' }}>
+                            {videoDuration ? `${formatTime(sliderValue)} / ${formatTime(videoDuration)}` : 'Cargando video...'}
+                          </span>
+                          <button
+                            type="button"
+                            style={bs.confirmFrameBtn}
+                            disabled={!videoDuration}
+                            onClick={() => setForm(f => ({ ...f, image_url: videoThumbUrl(form.video_url, sliderValue) }))}
+                          >Usar este frame</button>
+                        </div>
+                        {form.image_url === videoThumbUrl(form.video_url, sliderValue) && (
+                          <div style={{ fontSize: 11, color: '#1a9e7a', fontWeight: 600, marginTop: 4 }}>✓ Portada confirmada</div>
+                        )}
+                      </>
+                    ) : (
+                      <div style={bs.coverHint}>Subí un video primero para poder elegir un frame</div>
+                    )
+                  )}
+
+                  {coverMode === 'upload' && (
+                    <>
+                      <div className="img-area" onClick={() => mainImgRef.current?.click()}>
+                        {form.image_url && frameOffsetOf(form.image_url) === null ? (
+                          <>
+                            <img src={form.image_url} style={bs.imgPrev} alt="preview" />
+                            <div style={{ fontSize: 11, color: '#a0a0b8', marginTop: 6 }}>Tocá para cambiar</div>
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ fontSize: 22, marginBottom: 4 }}>🖼</div>
+                            <div style={{ fontSize: 12, color: '#a0a0b8', fontWeight: 500 }}>Tocá para subir una portada</div>
+                          </>
+                        )}
+                        <input ref={mainImgRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleMainImage} disabled={!!uploading} />
+                      </div>
+                      {form.image_url && frameOffsetOf(form.image_url) === null && (
+                        <button style={bs.removeImgBtn} onClick={() => setForm(f => ({ ...f, image_url: '' }))}>
+                          ✕ Quitar portada
+                        </button>
+                      )}
+                    </>
+                  )}
                 </>
               ) : (
                 <>
@@ -318,7 +455,16 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
                     <input ref={videoRef} type="file" accept="video/*" style={{ display: 'none' }} onChange={handleVideoUpload} disabled={!!uploading} />
                   </div>
                   {form.video_url && (
-                    <button style={bs.removeImgBtn} onClick={() => setForm(f => ({ ...f, video_url: '' }))}>
+                    <button
+                      style={bs.removeImgBtn}
+                      onClick={() => {
+                        const wasFrame = frameOffsetOf(form.image_url) !== null
+                        setForm(f => ({ ...f, video_url: '', image_url: wasFrame ? '' : f.image_url }))
+                        if (wasFrame) setCoverMode('auto')
+                        setVideoDuration(0)
+                        setSliderValue(0)
+                      }}
+                    >
                       ✕ Quitar video
                     </button>
                   )}
@@ -420,6 +566,11 @@ const bs = {
   fieldLbl: { fontSize: 11, fontWeight: 600, color: '#a0a0b8', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4, marginTop: 10, display: 'block' },
   upTag: { color: '#6c63ff', fontWeight: 500, textTransform: 'none', letterSpacing: 0 },
   imgPrev: { width: '100%', borderRadius: 8, display: 'block', objectFit: 'contain', background: '#f4f3ff', marginTop: 8 },
+  coverTabs: { display: 'flex', gap: 6, marginTop: 6 },
+  coverTab: { flex: 1, padding: '6px 8px', borderRadius: 8, border: '1.5px solid #e4e3f7', background: '#fff', fontSize: 11, fontWeight: 600, color: '#6b6b8a', cursor: 'pointer', fontFamily: 'inherit' },
+  coverTabActive: { flex: 1, padding: '6px 8px', borderRadius: 8, border: '1.5px solid #6c63ff', background: '#6c63ff', fontSize: 11, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' },
+  coverHint: { fontSize: 12, color: '#a0a0b8', padding: '10px 0' },
+  confirmFrameBtn: { padding: '5px 11px', borderRadius: 7, border: 'none', background: '#6c63ff', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' },
   videoPrev: { width: '100%', maxHeight: 320, borderRadius: 8, display: 'block', objectFit: 'contain', background: '#1a1a2e', marginTop: 8 },
   videoBadge: { position: 'absolute', bottom: 2, left: 2, background: 'rgba(0,0,0,.6)', color: '#fff', fontSize: 9, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, paddingLeft: 1 },
   removeImgBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#a0a0b8', marginTop: 4, padding: 0, fontFamily: 'inherit' },

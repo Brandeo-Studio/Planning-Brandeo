@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { videoThumbUrl } from '../../lib/cloudinary'
 import DayDetail from './DayDetail'
 import CommentBox from './CommentBox'
 
@@ -24,6 +25,25 @@ function isVideoUrl(url) {
 }
 const TYPE_BG = { historia: '#ebebff', posteo: '#e0faf3', reel: '#fff0ec', carrusel: '#f8eaff' }
 const TYPE_TC = { historia: '#6c63ff', posteo: '#1a9e7a', reel: '#d84315', carrusel: '#7b1fa2' }
+
+function CellThumb({ media }) {
+  const [broken, setBroken] = useState(false)
+  if (broken) {
+    return (
+      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#1a1a2e,#2d2b6e)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: 28, color: '#fff' }}>▶</span>
+      </div>
+    )
+  }
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <img src={media.url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" onError={() => setBroken(true)} />
+      {media.isVideo && (
+        <div style={s.playBadge}><span style={{ fontSize: 16, color: '#fff' }}>▶</span></div>
+      )}
+    </div>
+  )
+}
 
 function arrowStyle(side) {
   return {
@@ -120,10 +140,13 @@ export default function FeedView({ planningId, readOnly = false, commentMode = '
   function getCellMedia(p) {
     if (p.type === 'carrusel') {
       const first = parseCarouselImages(p.image_url)[0]
-      return first ? { url: first, video: isVideoUrl(first) } : null
+      if (!first) return null
+      return isVideoUrl(first)
+        ? { url: videoThumbUrl(first), isVideo: true }
+        : { url: first, isVideo: false }
     }
-    if (p.image_url) return { url: p.image_url, video: false }
-    if (p.video_url) return { url: p.video_url, video: true }
+    if (p.image_url) return { url: p.image_url, isVideo: false }
+    if (p.video_url) return { url: videoThumbUrl(p.video_url), isVideo: true }
     return null
   }
 
@@ -161,14 +184,7 @@ export default function FeedView({ planningId, readOnly = false, commentMode = '
           return (
             <div key={p.id} className="f-cell" onClick={() => setModalPost(p)}>
               {media
-                ? media.video
-                  ? (
-                    <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#1a1a2e,#2d2b6e)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                      <span style={{ fontSize: 28, color: '#fff' }}>▶</span>
-                      <span style={{ fontSize: 9, color: 'rgba(255,255,255,.7)', fontWeight: 600 }}>Video</span>
-                    </div>
-                  )
-                  : <img src={media.url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
+                ? <CellThumb media={media} />
                 : (
                     <div style={{ width: '100%', height: '100%', background: TYPE_BG[p.type], display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
                       <span style={{ fontSize: 20 }}>
@@ -223,6 +239,7 @@ const s = {
   sub: { fontSize: 12, color: '#a0a0b8' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3, borderRadius: 12, overflow: 'hidden' },
   badge: { position: 'absolute', top: 5, right: 5, background: 'rgba(0,0,0,.5)', borderRadius: 5, padding: '2px 5px', fontSize: 8, fontWeight: 700, color: '#fff' },
+  playBadge: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 34, height: 34, borderRadius: '50%', background: 'rgba(0,0,0,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   ovTitle: { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textAlign: 'center', fontSize: 10, fontWeight: 600, color: '#fff', padding: '0 10px', marginBottom: 3, lineHeight: 1.3 },
 }
 
