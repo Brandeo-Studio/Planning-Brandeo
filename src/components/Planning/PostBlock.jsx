@@ -80,7 +80,9 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
   async function uploadFile(file, path) {
     await supabase.storage.from('planning-media').upload(path, file, { upsert: true })
     const { data } = supabase.storage.from('planning-media').getPublicUrl(path)
-    return data.publicUrl
+    // upsert reuses the same path (e.g. posts/<id>/main.jpg), so the URL never
+    // changes on replace — bust the browser cache or the old file keeps showing.
+    return `${data.publicUrl}?t=${Date.now()}`
   }
 
   async function handleMainImage(e) {
