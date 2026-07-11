@@ -28,6 +28,7 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
   })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [moveDate, setMoveDate] = useState('')
@@ -85,42 +86,63 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
   async function handleMainImage(e) {
     const file = e.target.files[0]; if (!file) return
     setUploading('main')
-    const ext = file.name.split('.').pop()
-    const url = await uploadFile(file, `posts/${post.id}/main.${ext}`)
-    setForm(f => ({ ...f, image_url: url }))
-    setUploading(false)
-    e.target.value = ''
+    setUploadError('')
+    try {
+      const ext = file.name.split('.').pop()
+      const url = await uploadFile(file, `posts/${post.id}/main.${ext}`)
+      setForm(f => ({ ...f, image_url: url }))
+    } catch (err) {
+      setUploadError('No se pudo subir la imagen. Probá de nuevo.')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
   }
 
   async function handleRefImages(e) {
     const files = Array.from(e.target.files); if (!files.length) return
     setUploading('ref')
-    const urls = await Promise.all(files.map((f, i) => {
-      const ext = f.name.split('.').pop()
-      return uploadFile(f, `posts/${post.id}/ref/${Date.now()}-${i}.${ext}`)
-    }))
-    setForm(f => ({ ...f, ref_images: [...(f.ref_images || []), ...urls] }))
-    setUploading(false)
-    e.target.value = ''
+    setUploadError('')
+    try {
+      const urls = await Promise.all(files.map((f, i) => {
+        const ext = f.name.split('.').pop()
+        return uploadFile(f, `posts/${post.id}/ref/${Date.now()}-${i}.${ext}`)
+      }))
+      setForm(f => ({ ...f, ref_images: [...(f.ref_images || []), ...urls] }))
+    } catch (err) {
+      setUploadError('No se pudieron subir las imágenes de referencia. Probá de nuevo.')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
   }
 
   async function handleCarouselMainImages(e) {
     const files = Array.from(e.target.files); if (!files.length) return
     setUploading('main')
-    const urls = await Promise.all(files.map(f => uploadToCloudinary(f)))
-    setForm(f => ({ ...f, main_images: [...(f.main_images || []), ...urls] }))
-    setUploading(false)
-    e.target.value = ''
+    setUploadError('')
+    try {
+      const urls = await Promise.all(files.map(f => uploadToCloudinary(f)))
+      setForm(f => ({ ...f, main_images: [...(f.main_images || []), ...urls] }))
+    } catch (err) {
+      setUploadError('No se pudieron subir los slides. Probá de nuevo.')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
   }
 
   async function handleVideoUpload(e) {
     const file = e.target.files[0]; if (!file) return
     setUploading('video')
+    setUploadError('')
     try {
       const url = await uploadToCloudinary(file)
       setForm(f => ({ ...f, video_url: url }))
       setVideoDuration(0)
       setSliderValue(0)
+    } catch (err) {
+      setUploadError('No se pudo subir el video. Probá de nuevo.')
     } finally {
       setUploading(false)
       e.target.value = ''
@@ -528,6 +550,7 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
               />
 
               {/* 8. Save row */}
+              {uploadError && <div style={bs.uploadErr}>{uploadError}</div>}
               <div style={bs.saveRow}>
                 <button className="btn-cancel-secondary" onClick={() => setExpanded(false)}>Cerrar</button>
                 <button className="btn-save-primary" onClick={handleSave} disabled={saving || !!uploading}>
@@ -567,6 +590,7 @@ const bs = {
   refThumb: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
   refRm: { position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: '50%', background: 'rgba(0,0,0,.6)', border: 'none', color: '#fff', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, lineHeight: 1 },
   saveRow: { display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: '1rem', paddingTop: '1rem', borderTop: '1.5px solid #e4e3f7' },
+  uploadErr: { fontSize: 12, color: '#d84315', fontWeight: 600, marginTop: '1rem' },
   linkRow: { display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 },
   linkRm: { flexShrink: 0, width: 28, height: 28, borderRadius: '50%', border: 'none', background: '#f4f3ff', color: '#a0a0b8', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' },
   addLinkBtn: { marginTop: 8, padding: '6px 14px', borderRadius: 8, border: '1.5px dashed #c0c0d8', background: 'none', fontSize: 12, fontWeight: 600, color: '#6b6b8a', cursor: 'pointer', fontFamily: 'inherit' },
