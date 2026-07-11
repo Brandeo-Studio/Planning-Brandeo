@@ -1,28 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { uploadToCloudinary, videoThumbUrl, frameOffsetOf } from '../../lib/cloudinary'
+import { isVideoUrl, parseCarouselImages } from '../../lib/media'
 import CommentBox from './CommentBox'
+import MediaCarousel from './MediaCarousel'
 
 const TYPE_LABELS = { historia: 'Historia', posteo: 'Posteo', reel: 'Reel', carrusel: 'Carrusel' }
 const TYPE_BG = { historia: '#ebebff', posteo: '#e0faf3', reel: '#fff0ec', carrusel: '#f8eaff' }
 const TYPE_TC = { historia: '#6c63ff', posteo: '#1a9e7a', reel: '#d84315', carrusel: '#7b1fa2' }
-const VIDEO_EXTENSIONS = ['mp4', 'mov', 'webm', 'avi', 'mkv', 'm4v', 'ogg']
-
-function parseCarouselImages(imageUrl) {
-  if (!imageUrl) return []
-  try {
-    const parsed = JSON.parse(imageUrl)
-    return Array.isArray(parsed) ? parsed : [imageUrl]
-  } catch {
-    return [imageUrl]
-  }
-}
-
-function isVideoUrl(url) {
-  if (!url) return false
-  const ext = url.split('.').pop().split('?')[0].toLowerCase()
-  return VIDEO_EXTENSIONS.includes(ext)
-}
 
 function formatTime(sec) {
   if (!isFinite(sec) || sec < 0) return '0:00'
@@ -227,14 +212,11 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
           {readOnly ? (
             /* Read-only */
             <div style={{ paddingTop: 4 }}>
-              {post.type === 'carrusel'
-                ? parseCarouselImages(post.image_url).map((url, i) => (
-                    isVideoUrl(url)
-                      ? <video key={i} src={url} controls style={{ ...bs.imgPrev, marginTop: 8 }} />
-                      : <img key={i} src={url} style={{ ...bs.imgPrev, marginTop: 8 }} alt={`slide ${i + 1}`} />
-                  ))
-                : post.image_url && <img src={post.image_url} style={{ ...bs.imgPrev, marginTop: 8 }} alt="" />
-              }
+              <MediaCarousel items={
+                post.type === 'carrusel'
+                  ? parseCarouselImages(post.image_url).map(url => ({ url, isVideo: isVideoUrl(url) }))
+                  : (post.image_url ? [{ url: post.image_url, isVideo: false }] : [])
+              } />
               {(isReel || isHistoria) && post.video_url && (
                 <video src={post.video_url} controls style={{ ...bs.videoPrev, marginTop: 8 }} />
               )}
@@ -242,6 +224,12 @@ export default function PostBlock({ post, onUpdate, onDelete, readOnly = false, 
                 <>
                   <div style={bs.fieldLbl}>Link de entrega</div>
                   <a href={post.delivery_link} target="_blank" rel="noopener noreferrer" style={bs.linkItem}>{post.delivery_link}</a>
+                </>
+              )}
+              {(post.ref_images || []).length > 0 && (
+                <>
+                  <div style={bs.fieldLbl}>Imágenes de referencia</div>
+                  <MediaCarousel items={post.ref_images.map(url => ({ url, isVideo: false }))} />
                 </>
               )}
               {(post.ref_links || []).filter(Boolean).length > 0 && (

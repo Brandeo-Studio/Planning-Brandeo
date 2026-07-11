@@ -1,28 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { videoThumbUrl } from '../../lib/cloudinary'
+import { isVideoUrl, parseCarouselImages } from '../../lib/media'
 import DayDetail from './DayDetail'
 import CommentBox from './CommentBox'
+import MediaCarousel from './MediaCarousel'
 
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const TYPE_LABELS = { historia: 'Historia', posteo: 'Posteo', reel: 'Reel', carrusel: 'Carrusel' }
-
-function parseCarouselImages(imageUrl) {
-  if (!imageUrl) return []
-  try {
-    const parsed = JSON.parse(imageUrl)
-    return Array.isArray(parsed) ? parsed : [imageUrl]
-  } catch {
-    return [imageUrl]
-  }
-}
-
-const VIDEO_EXTENSIONS = ['mp4', 'mov', 'webm', 'avi', 'mkv', 'm4v', 'ogg']
-function isVideoUrl(url) {
-  if (!url) return false
-  const ext = url.split('.').pop().split('?')[0].toLowerCase()
-  return VIDEO_EXTENSIONS.includes(ext)
-}
 const TYPE_BG = { historia: '#ebebff', posteo: '#e0faf3', reel: '#fff0ec', carrusel: '#f8eaff' }
 const TYPE_TC = { historia: '#6c63ff', posteo: '#1a9e7a', reel: '#d84315', carrusel: '#7b1fa2' }
 
@@ -45,21 +30,24 @@ function CellThumb({ media }) {
   )
 }
 
-function arrowStyle(side) {
-  return {
-    position: 'absolute', top: '50%', transform: 'translateY(-50%)',
-    ...(side === 'left' ? { left: 6 } : { right: 6 }),
-    width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,.5)',
-    border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 5,
+function getModalSlides(post) {
+  if (post.type === 'carrusel') {
+    return parseCarouselImages(post.image_url).map(url => ({ url, isVideo: isVideoUrl(url) }))
   }
+  if (post.type === 'reel') {
+    const slides = []
+    const cover = post.image_url || (post.video_url ? videoThumbUrl(post.video_url) : null)
+    if (cover) slides.push({ url: cover, isVideo: false })
+    if (post.video_url) slides.push({ url: post.video_url, isVideo: true })
+    return slides
+  }
+  if (post.image_url) return [{ url: post.image_url, isVideo: false }]
+  if (post.video_url) return [{ url: post.video_url, isVideo: true }]
+  return []
 }
 
 function PostModal({ post, onClose, onEditDay, readOnly, commentMode = 'admin' }) {
-  const [idx, setIdx] = useState(0)
-  const images = post.type === 'carrusel'
-    ? parseCarouselImages(post.image_url)
-    : (post.image_url ? [post.image_url] : (post.video_url ? [post.video_url] : []))
+  const slides = getModalSlides(post)
 
   const dateLabel = post.date
     ? new Date(post.date + 'T00:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -78,29 +66,9 @@ function PostModal({ post, onClose, onEditDay, readOnly, commentMode = 'admin' }
           <button style={modal.closeBtn} onClick={onClose}>✕</button>
         </div>
         <div style={modal.body}>
-          {images.length > 0 ? (
-            <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
-              {post.type === 'carrusel' ? (
-                <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', background: '#e4e3f7' }}>
-                  {isVideoUrl(images[idx])
-                    ? <video src={images[idx]} controls style={{ width: '100%', objectFit: 'contain', display: 'block', maxHeight: 480, background: '#1a1a2e' }} />
-                    : <img src={images[idx]} style={{ width: '100%', objectFit: 'contain', display: 'block', maxHeight: 480, background: '#1a1a2e' }} alt="" />
-                  }
-                  {images.length > 1 && (
-                    <>
-                      <button onClick={() => setIdx(i => (i - 1 + images.length) % images.length)} style={arrowStyle('left')}>←</button>
-                      <button onClick={() => setIdx(i => (i + 1) % images.length)} style={arrowStyle('right')}>→</button>
-                      <div style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,.5)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20 }}>
-                        {idx + 1}/{images.length}
-                      </div>
-                    </>
-                  )}
-                </div>
-              ) : isVideoUrl(images[0]) ? (
-                <video src={images[0]} controls style={{ width: '100%', borderRadius: 10, objectFit: 'contain', display: 'block', maxHeight: 500, background: '#1a1a2e' }} />
-              ) : (
-                <img src={images[0]} style={{ width: '100%', borderRadius: 10, objectFit: 'contain', display: 'block', maxHeight: 500, background: '#f4f3ff' }} alt="" />
-              )}
+          {slides.length > 0 ? (
+            <div style={{ marginBottom: '0.75rem' }}>
+              <MediaCarousel items={slides} maxHeight={480} />
             </div>
           ) : (
             <div style={{ width: '100%', aspectRatio: '1', borderRadius: 10, background: TYPE_BG[post.type], display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>
